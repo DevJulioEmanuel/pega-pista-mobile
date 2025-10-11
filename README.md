@@ -18,7 +18,9 @@
 
 ## Descrição do Projeto
 
-[Descreva em 2-3 parágrafos o que o seu projeto faz. Qual é o problema que ele resolve? Quem é o público-alvo? Quais são as principais funcionalidades?]
+O nosso projeto é um aplicativo de corrida que transforma o exercício físico numa experiência social, divertida e altamente motivacional. O principal problema que resolvemos é a barreira da inconsistência e da falta de estímulo que leva muitas pessoas a desistirem de correr. Para quem busca uma vida mais saudável, começar pode ser intimidante e a atividade pode tornar-se solitária rapidamente. A nossa solução combate diretamente esse desafio, convertendo cada corrida num jogo contagiante entre amigos e numa celebração do progresso pessoal, independentemente do nível do corredor.
+
+Pensado para um público-geral, desde quem está a calçar os ténis pela primeira vez até maratonistas que procuram uma competição saudável, o aplicativo tem como principal pilar a gamificação. As suas funcionalidades incluem o rastreamento completo da atividade (distância, ritmo, mapa do percurso, passos) e um poderoso sistema de competição social. Através de um ranking interno, os amigos podem comparar não só o desempenho, mas também a regularidade, com um sistema de "chamas" (foguinhos) que premeia a consistência. Além disso, a integração com a câmara permite partilhar fotos e momentos, transformando a experiência de correr num mural de conquistas e inspiração mútua.
 
 ---
 
