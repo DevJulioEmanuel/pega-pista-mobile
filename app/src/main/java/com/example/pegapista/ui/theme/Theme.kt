@@ -1,10 +1,9 @@
-package com.seuprojeto.ui.theme
+package com.example.pegapista.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import com.example.pegapista.ui.theme.AppTypography
 
 private val LightColors = lightColorScheme(
     primary = BluePrimary,

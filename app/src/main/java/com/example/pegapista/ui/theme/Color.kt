@@ -1,4 +1,4 @@
-package com.seuprojeto.ui.theme
+package com.example.pegapista.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
