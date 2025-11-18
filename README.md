@@ -8,7 +8,6 @@
 - **Nome do Aluno(a) 1:** [Daniel Jacó dos Santos Pereira - 566734]
 - **Nome do Aluno(a) 2:** [Júlio Emanuel Pereira da Silva - 567856]
 - **Nome do Aluno(a) 3:** [Henrique Mendes da Silva - 567841]
-- ...
 
 ---
 
