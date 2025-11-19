@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,23 +45,20 @@ import com.example.pegapista.R
 @Composable
 fun FeedScreen(modifier: Modifier = Modifier.background(Color.White)) {
     val postagens = listOf(
-        Postagem("Daniel Jacó", "5.2 km", "50:15 min"),
-        Postagem("Henrique Mendes", "3.0 km", "30:00 min"),
-        Postagem("Henrique Mendes", "3.0 km", "30:00 min")
-    )
+        Postagem("Arthur Lelis", "Caminhada Vespertina", "2.0 km", "30:00 min"),
+        Postagem("Daniel Jacó", "Caminhada Matutina","5.2 km", "50:15 min"),
+        Postagem("Henrique Mendes", "Correndo com amigos","3.0 km", "30:00 min"),
+        )
     Column() {
         Image(
             painter = painterResource(R.drawable.logo_aplicativo),
             contentDescription = "",
-            modifier = Modifier.size(200.dp).align(Alignment.CenterHorizontally)
+            modifier = Modifier.size(150.dp).align(Alignment.CenterHorizontally)
         )
 
         Column(
             modifier = modifier
-                .fillMaxSize()
-                .padding(start = 10.dp, end = 10.dp, bottom = 25.dp)
-                .clip(RoundedCornerShape(15.dp))
-                .background(MaterialTheme.colorScheme.primary),
+                .fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -92,7 +90,9 @@ fun PostCard(post: Postagem) {
                 .padding(10.dp)
                 .fillMaxWidth()
         ){
-            Row() {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = "",
@@ -104,34 +104,41 @@ fun PostCard(post: Postagem) {
                     Text(
                         text=post.Usuario,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text="Correu há 2 horas",
-                        fontSize = 15.sp,
+                        fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-
-
             }
             Spacer(Modifier.height(15.dp))
-            Text(
-                text=post.Distancia,
-                fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text=post.Tempo,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text="Ritmo medio: 4,5/km",
-                color = MaterialTheme.colorScheme.primary
+            Column {
+                Text(
+                    text = post.Titulo,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.height(12.dp))
+                Row {
+                    metadadosCorrida(post.Distancia, "Distancia")
+                    Spacer(Modifier.width(50.dp))
+                    metadadosCorrida(post.Tempo, "Tempo")
+                    Spacer(Modifier.width(50.dp))
+                    metadadosCorrida("4,5 km/min", "Ritmo")
+                }
+            }
+            Spacer(Modifier.height(15.dp))
+            Image(
+                painter = painterResource(R.drawable.mapa_teste),
+                contentDescription = "Imagem do Mapa",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .size(200.dp)
+
             )
             Spacer(Modifier.height(8.dp))
             Row() {
@@ -141,6 +148,7 @@ fun PostCard(post: Postagem) {
                         contentDescription = "Like",
                         tint = MaterialTheme.colorScheme.primary
                     )
+
                 }
                 IconButton(onClick = {}) {
                     Icon(
@@ -154,6 +162,22 @@ fun PostCard(post: Postagem) {
        }
 }
 
+@Composable
+fun metadadosCorrida(dado: String, metadado: String) {
+    Column {
+        Text(
+            text=metadado,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text=dado,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
 
 
 @Preview(showBackground = true, showSystemUi = true)
