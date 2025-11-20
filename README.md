@@ -11,9 +11,7 @@
 
 ---
 
-## Título do Projeto
-
-[PegaPista!]
+## PEGAPISTA!
 
 ## Descrição do Projeto
 
