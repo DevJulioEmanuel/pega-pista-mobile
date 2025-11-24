@@ -49,7 +49,9 @@ fun FeedScreen(modifier: Modifier = Modifier.background(Color.White)) {
         Postagem("Daniel Jacó", "Caminhada Matutina","5.2 km", "50:15 min"),
         Postagem("Henrique Mendes", "Correndo com amigos","3.0 km", "30:00 min"),
         )
-    Column() {
+    Column(
+        modifier = Modifier.background(Color.White)
+    ) {
         Image(
             painter = painterResource(R.drawable.logo_aplicativo),
             contentDescription = "",
