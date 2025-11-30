@@ -57,12 +57,12 @@ fun LoginScreen(modifier: Modifier = Modifier.background(MaterialTheme.colorSche
     Column (
         modifier = modifier
             .fillMaxSize()
-            .padding(start = 40.dp, end = 40.dp, top = 150.dp, bottom = 150.dp)
+            .padding(start = 40.dp, end = 40.dp, top = 100.dp, bottom = 100.dp)
             .background(
                 color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(15.dp)
             ),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Image(
