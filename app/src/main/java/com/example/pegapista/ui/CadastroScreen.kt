@@ -46,14 +46,11 @@ fun CadastroScreen(modifier: Modifier = Modifier) {
     var senha by remember { mutableStateOf("") }
     var confirmarSenha by remember { mutableStateOf("") }
 
-    val scrollState = rememberScrollState()
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
-            .padding(horizontal = 20.dp) // Padding lateral geral
-            .verticalScroll(scrollState), // Permite rolar a tela
+            .padding(horizontal = 20.dp), // Padding lateral geral
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
