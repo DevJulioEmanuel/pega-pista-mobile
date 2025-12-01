@@ -3,7 +3,7 @@ package com.example.pegapista.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Paleta principal PegaPista
-val BluePrimary = Color(0xFF018EE1)
+val BluePrimary = Color(0xFF049AF5)
 val BluePrimaryDark = Color(0xFF006CA8)     // derivado (30% mais escuro)
 val BluePrimaryLight = Color(0xFF4FC3F7)    // derivado (mais claro)
 
