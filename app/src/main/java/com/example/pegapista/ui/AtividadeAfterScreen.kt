@@ -84,7 +84,7 @@ fun AtividadeAfterScreen() {
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF36A9E1)
+                containerColor = MaterialTheme.colorScheme.primary
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -132,7 +132,7 @@ fun AtividadeAfterScreen() {
                     // Botão Finalizar (Verde)
                     Button(
                         onClick = { /* Ação de Finalizar */ },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF69F0AE)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0FDC52)),
                         shape = RoundedCornerShape(50)
                     ) {
                         Text("Finalizar", color = Color.White, fontWeight = FontWeight.Bold)
