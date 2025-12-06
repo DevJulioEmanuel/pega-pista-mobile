@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ModeComment
 import androidx.compose.material.icons.outlined.ModeComment
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -99,7 +100,7 @@ fun PostCard(post: Postagem) {
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = "",
                     modifier = Modifier.size(45.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = Color.Gray
                 )
                 Spacer(Modifier.width(5.dp))
                 Column {
@@ -107,12 +108,12 @@ fun PostCard(post: Postagem) {
                         text=post.Usuario,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color.Gray
                     )
                     Text(
                         text="Correu há 2 horas",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color.Gray
                     )
                 }
             }
@@ -122,7 +123,7 @@ fun PostCard(post: Postagem) {
                     text = post.Titulo,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = Color.Gray
                 )
                 Spacer(Modifier.height(12.dp))
                 Row {
@@ -160,6 +161,11 @@ fun PostCard(post: Postagem) {
                     )
                 }
             }
+            Divider(
+                modifier = Modifier.padding(horizontal = 0.dp),
+                thickness = 0.8.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
         }
        }
 }
@@ -170,13 +176,13 @@ fun metadadosCorrida(dado: String, metadado: String) {
         Text(
             text=metadado,
             fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.primary
+            color = Color.Gray
         )
         Text(
             text=dado,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.primary
+            color = Color.Gray
         )
     }
 }
