@@ -1,43 +1,60 @@
-package com.example.pegapista.ui
+package com.example.pegapista
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.pegapista.navigation.NavigationGraph
+import com.example.pegapista.ui.BottomBar
 
 @Composable
 fun PegaPistaScreen() {
-
+    // 1. O Controlador de navegação é criado AQUI
     val navController = rememberNavController()
+
+    // 2. Observamos a rota atual para decidir se mostramos a barra ou não
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // 3. Lista de telas que DEVEM ter a barra inferior
+    val screensWithBottomBar = listOf(
+        "Home",
+        "comunidade",
+        "ranking",
+        "perfil",
+        "AtividadeBefore",
+        "AtividadeAfter",
+        "notificacoes"
+    )
+
+
+    val showBottomBar = currentRoute in screensWithBottomBar
 
     Scaffold(
         bottomBar = {
-            BottomBar(
-                currentRoute = navController.currentDestination?.route,
-                onItemClick = { route ->
-                    navController.navigate(route) {
-                        launchSingleTop = true
-                        popUpTo(navController.graph.startDestinationId)
+
+            if (showBottomBar) {
+                BottomBar(
+                    currentRoute = currentRoute,
+                    onItemClick = { route ->
+                        navController.navigate(route) {
+                            // Configuração padrão para evitar empilhar telas iguais
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
-            )
+                )
+            }
         }
-    ) { padding ->
-        NavHost(
+    ) { paddingValues ->
+
+        NavigationGraph(
             navController = navController,
-            startDestination = "comunidade",
-            modifier = Modifier.padding(padding)
-        ) {
-
-            composable("inicio") { LoginScreen() }
-            composable("comunidade") { FeedScreen() }
-            composable("perfil") { PerfilScreen() }
-            composable("atividade") {  }
-            composable("notificacoes") {}
-
-        }
+            modifier = Modifier.padding(paddingValues)
+        )
     }
 }
