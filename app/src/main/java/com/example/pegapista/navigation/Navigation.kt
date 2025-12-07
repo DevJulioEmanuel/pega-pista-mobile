@@ -19,7 +19,7 @@ fun NavigationGraph(
         startDestination = "inicio",
         modifier = modifier
     ) {
-        // --- Telas SEM Barra (não estão na lista do PegaPistaScreen) ---
+
         composable("inicio") {
             InicioScreen(
                 onEntrarClick = { navController.navigate("login") },
@@ -40,7 +40,15 @@ fun NavigationGraph(
         }
 
         composable("cadastro") {
-            CadastroScreen()
+            CadastroScreen(
+                onCadastroSucesso = {
+                    // Quando o cadastro termina, vai para a Home.
+                    // O popUpTo limpa a pilha para que o botão "Voltar" não retorne ao cadastro.
+                    navController.navigate("Home") {
+                        popUpTo("inicio") { inclusive = true }
+                    }
+                }
+            )
         }
 
         // --- Telas COM Barra (estão na lista do PegaPistaScreen) ---
