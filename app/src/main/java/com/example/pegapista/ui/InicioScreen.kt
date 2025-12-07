@@ -122,7 +122,7 @@ fun InicioScreen(
                     // 2. AQUI: Quando clicar, aciona o "onEntrarClick"
                     onClick = onEntrarClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF039BE5)
+                        containerColor = Color(0xFF068EC9)
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -142,7 +142,7 @@ fun InicioScreen(
                 Button(
                     onClick = onCadastrarClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF039BE5)
+                        containerColor = Color(0xFF068EC9)
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier

@@ -64,7 +64,9 @@ import com.example.pegapista.ui.theme.PegaPistaTheme
 import kotlin.math.sin
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onIniciarCorrida: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -235,7 +237,7 @@ fun HomeScreen() {
                 Spacer(modifier = Modifier.height(0.dp))
 // --- BOTÃO INICIAR CORRIDA ---
                 Button(
-                    onClick = { /* Ação do botão */ },
+                    onClick = onIniciarCorrida,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF039BE5)
                     ),
@@ -347,6 +349,6 @@ fun ItemRanking(posicao: String, nome: String, largura: Float) {
 @Composable
 fun HomeScreenPreview() {
     PegaPistaTheme {
-        HomeScreen()
+        HomeScreen(onIniciarCorrida = {})
     }
 }
