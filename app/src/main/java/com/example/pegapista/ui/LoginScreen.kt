@@ -1,5 +1,7 @@
 package com.example.pegapista.ui
 
+import android.widget.Toast
+import android.util.Log
 import com.example.pegapista.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(
@@ -45,7 +49,11 @@ fun LoginScreen(
     onEntrarHome: () -> Unit
 
 ) {
-
+    var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(false) }
+    val auth = FirebaseAuth.getInstance()
     Column (
         modifier = modifier
             .fillMaxSize()
@@ -70,23 +78,58 @@ fun LoginScreen(
             modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
         )
         Spacer(Modifier.height(25.dp))
-        Textsfields(modifier, "E-mail")
+        Textsfields(
+            value = email,
+            onValueChange = {email = it},
+            placeholder = "Email"
+        )
         Spacer(Modifier.height(15.dp))
-        Textsfields(modifier, placeholder = "Senha")
+        Textsfields(
+            value = senha,
+            onValueChange = { senha = it },
+            placeholder = "Senha"
+        )
         Spacer(Modifier.height(40.dp))
-        ButtonEntrar(onEntrarHome)
+        ButtonEntrar(
+            onClick = {
+                if (email.isNotEmpty() && senha.isNotEmpty()) {
+                    isLoading = true
+                    Log.d("LOGIN","Tentando logar com: $email")
+
+                    auth.signInWithEmailAndPassword(email, senha)
+                        .addOnSuccessListener{
+                            isLoading = false
+                            Log.d("LOGIN", "Sucesso! Indo para a home")
+                            Toast.makeText(context, "Bem-vindo de volta!", Toast.LENGTH_SHORT).show()
+                            onEntrarHome()
+                        }
+                        .addOnFailureListener { exception -> // <--- ADICIONEI O TRATAMENTO DE ERRO
+                            isLoading = false
+                            Log.e("LOGIN", "Erro: ${exception.message}")
+                            Toast.makeText(context, "Erro: Verifique e-mail e senha", Toast.LENGTH_LONG).show()
+                        }
+
+                } else {
+                    Toast.makeText(context, "Os campos não podem estar vazios", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        )
     }
 }
 
 @Composable
-fun Textsfields(modifier: Modifier, placeholder: String) {
+fun Textsfields(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String
+) {
     val isPassword = placeholder == "Senha"
     val visualTransformation =
         if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
-    var value by remember { mutableStateOf("") }
     OutlinedTextField(
         value = value,
-        onValueChange = { value = it },
+        onValueChange = onValueChange,
         placeholder = {
             Text(
                 text = placeholder,
@@ -116,10 +159,10 @@ fun Textsfields(modifier: Modifier, placeholder: String) {
 
 @Composable
 fun ButtonEntrar(
-    onEntrarHome: () -> Unit
+    onClick: () -> Unit
 ) {
     Button(
-        onClick = onEntrarHome,
+        onClick = onClick,
         modifier = Modifier
             .padding(horizontal = 30.dp)
             .shadow(
