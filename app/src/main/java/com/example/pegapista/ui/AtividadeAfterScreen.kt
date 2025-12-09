@@ -1,5 +1,6 @@
 package com.example.pegapista.ui
 
+import android.widget.Toast
 import com.example.pegapista.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -62,9 +64,22 @@ import com.example.pegapista.ui.theme.BackgroundLight
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import kotlin.math.sin
-
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.example.pegapista.data.Corrida
 @Composable
-fun AtividadeAfterScreen() {
+fun AtividadeAfterScreen(
+    distancia: Double = 3.50,
+    tempo: String = "28:30",
+    pace: String = "5:45",
+    onFinishNavigation: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+
+
+    var isSaving by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -131,9 +146,42 @@ fun AtividadeAfterScreen() {
 
                     // Botão Finalizar (Verde)
                     Button(
-                        onClick = { /* Ação de Finalizar */ },
+                        onClick = { val user = auth.currentUser
+                            if (user != null && !isSaving) {
+                                isSaving = true
+
+
+                                val corridaId = db.collection("corridas").document().id
+
+
+                                val novaCorrida = Corrida(
+                                    id = corridaId,
+                                    userId = user.uid,
+                                    distanciaKm = distancia,
+                                    tempo = tempo,
+                                    pace = pace
+                                    // A data é gerada automaticamente na classe Corrida
+                                )
+
+
+                                db.collection("corridas").document(corridaId)
+                                    .set(novaCorrida)
+                                    .addOnSuccessListener {
+                                        isSaving = false
+                                        Toast.makeText(context, "Corrida salva com sucesso!", Toast.LENGTH_SHORT).show()
+
+                                        onFinishNavigation()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        isSaving = false
+                                        Toast.makeText(context, "Erro ao salvar: ${e.message}", Toast.LENGTH_LONG).show()
+                                    }
+                            } else {
+                                Toast.makeText(context, "Erro: Usuário não logado", Toast.LENGTH_SHORT).show()
+                            }},
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0FDC52)),
-                        shape = RoundedCornerShape(50)
+                        shape = RoundedCornerShape(50),
+                        enabled = !isSaving
                     ) {
                         Text("Finalizar", color = Color.White, fontWeight = FontWeight.Bold)
                     }
