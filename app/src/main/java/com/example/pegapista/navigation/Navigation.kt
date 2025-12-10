@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.pegapista.ui.*
-
+import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
@@ -14,9 +14,15 @@ fun NavigationGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+
+    val auth = FirebaseAuth.getInstance()
+    val usuarioAtual = auth.currentUser
+
+
+    val destinoInicial = if (usuarioAtual != null) "Home" else "inicio"
     NavHost(
         navController = navController,
-        startDestination = "inicio",
+        startDestination = destinoInicial,
         modifier = modifier
     ) {
 
@@ -31,7 +37,7 @@ fun NavigationGraph(
             LoginScreen(
                 onVoltarClick = { navController.popBackStack() },
                 onEntrarHome = {
-                    // Remove o login da pilha para não voltar para ele
+
                     navController.navigate("Home") {
                         popUpTo("inicio") { inclusive = true }
                     }
@@ -42,8 +48,7 @@ fun NavigationGraph(
         composable("cadastro") {
             CadastroScreen(
                 onCadastroSucesso = {
-                    // Quando o cadastro termina, vai para a Home.
-                    // O popUpTo limpa a pilha para que o botão "Voltar" não retorne ao cadastro.
+
                     navController.navigate("Home") {
                         popUpTo("inicio") { inclusive = true }
                     }
