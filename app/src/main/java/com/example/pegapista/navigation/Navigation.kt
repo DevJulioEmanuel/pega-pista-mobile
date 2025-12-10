@@ -5,8 +5,15 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.pegapista.ui.*
-
+import com.example.pegapista.ui.screens.AtividadeAfterScreen
+import com.example.pegapista.ui.screens.AtividadeBeforeScreen
+import com.example.pegapista.ui.screens.CadastroScreen
+import com.example.pegapista.ui.screens.FeedScreen
+import com.example.pegapista.ui.screens.HomeScreen
+import com.example.pegapista.ui.screens.InicioScreen
+import com.example.pegapista.ui.screens.LoginScreen
+import com.example.pegapista.ui.screens.NotificacoesScreen
+import com.example.pegapista.ui.screens.PerfilScreen
 
 
 @Composable

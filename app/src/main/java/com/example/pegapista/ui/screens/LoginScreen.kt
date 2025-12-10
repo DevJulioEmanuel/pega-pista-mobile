@@ -1,4 +1,4 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
 import android.widget.Toast
 import android.util.Log
