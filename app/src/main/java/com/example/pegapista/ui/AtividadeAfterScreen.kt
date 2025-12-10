@@ -124,7 +124,7 @@ fun AtividadeAfterScreen(
                 )
 
 
-                BlocoDados(valor = "3.50", label = "Km")
+                BlocoDados(valor ="$distancia", label = "km")
                 BlocoDados(valor = "28:30", label = "min")
                 BlocoDados(valor = "5:45", label = "ritmo médio atual")
 
