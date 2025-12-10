@@ -19,9 +19,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // MUDANÇA AQUI:
-                    // Em vez de chamar NavigationGraph(), chamamos o PegaPistaScreen()
-                    // O PegaPistaScreen já tem o NavigationGraph dentro dele.
+
                     PegaPistaScreen()
                 }
             }
