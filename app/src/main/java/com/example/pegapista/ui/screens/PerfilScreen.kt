@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
-import com.example.pegapista.data.Usuario
+import com.example.pegapista.data.models.Usuario
 
 @Composable
 fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {

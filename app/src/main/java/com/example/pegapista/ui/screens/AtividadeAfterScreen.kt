@@ -1,31 +1,15 @@
 package com.example.pegapista.ui.screens
 
+import android.Manifest
 import android.widget.Toast
-import com.example.pegapista.R
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,23 +19,66 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pegapista.R
+import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.example.pegapista.ui.viewmodels.CorridaViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.example.pegapista.data.Corrida
+
 @Composable
 fun AtividadeAfterScreen(
-    distancia: Double = 3.50,
-    tempo: String = "28:30",
-    pace: String = "5:45",
+    viewModel: CorridaViewModel = viewModel(),
     onFinishNavigation: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val db = FirebaseFirestore.getInstance()
-    val auth = FirebaseAuth.getInstance()
+    val saveState by viewModel.saveState.collectAsState()
+
+    val distanciaMetros by viewModel.distancia.observeAsState(0f)
+    val tempoSegundos by viewModel.tempoSegundos.observeAsState(0L)
+    val paceAtual by viewModel.pace.observeAsState("-:--")
+    val isRastreando by viewModel.isRastreando.observeAsState(false)
+
+    val distanciaKmExibicao = "%.2f".format(distanciaMetros / 1000)
+
+    val tempoExibicao = remember(tempoSegundos) {
+        val horas = tempoSegundos / 3600
+        val minutos = (tempoSegundos % 3600) / 60
+        val segundos = tempoSegundos % 60
+        if (horas > 0) "%d:%02d:%02d".format(horas, minutos, segundos)
+        else "%02d:%02d".format(minutos, segundos)
+    }
+
+    LaunchedEffect(saveState) {
+        if (saveState.isSuccess) {
+            Toast.makeText(context, "Corrida salva com sucesso!", Toast.LENGTH_SHORT).show()
+            onFinishNavigation()
+        }
+        if (saveState.error != null) {
+            Toast.makeText(context, saveState.error, Toast.LENGTH_LONG).show()
+        }
+    }
 
 
-    var isSaving by remember { mutableStateOf(false) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fine = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarse = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        if (fine || coarse) {
+            viewModel.iniciarCorrida()
+        } else {
+            Toast.makeText(context, "GPS necessário para rastrear", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        permissionLauncher.launch(
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,10 +90,9 @@ fun AtividadeAfterScreen(
             painter = painterResource(R.drawable.logo_aplicativo),
             contentDescription = "Logo do aplicativo",
             modifier = Modifier
-                .size(150.dp) // Ajustei um pouco o tamanho
+                .size(150.dp)
                 .padding(bottom = 16.dp)
         )
-
 
         Card(
             shape = RoundedCornerShape(20.dp),
@@ -77,7 +103,6 @@ fun AtividadeAfterScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            // CONTEÚDO DENTRO DO CARD
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -86,76 +111,53 @@ fun AtividadeAfterScreen(
                 verticalArrangement = Arrangement.Center
             ) {
 
-
                 Text(
-                    text = "Live",
+                    text = if (isRastreando) "CORRENDO!" else "CORRIDA PAUSADA",
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
 
-
-                BlocoDados(valor = "3.50", label = "Km")
-                BlocoDados(valor = "28:30", label = "min")
-                BlocoDados(valor = "5:45", label = "ritmo médio atual")
+                BlocoDados(valor = distanciaKmExibicao, label = "Km")
+                BlocoDados(valor = tempoExibicao, label = "Tempo")
+                BlocoDados(valor = paceAtual, label = "Ritmo (min/km)")
 
                 Spacer(modifier = Modifier.height(40.dp))
-
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
 
+                    // BOTÃO PAUSAR / RETOMAR
                     Button(
-                        onClick = { /* Ação de Pausar */ },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                        onClick = { viewModel.toggleRastreamento() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isRastreando) Color(0xFFFF5252) else Color(0xFFFF9800) // Vermelho ou Laranja
+                        ),
                         shape = RoundedCornerShape(50)
                     ) {
-                        Text("Pausar", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = if (isRastreando) "Pausar" else "Retomar",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
-                    // Botão Finalizar (Verde)
                     Button(
-                        onClick = { val user = auth.currentUser
-                            if (user != null && !isSaving) {
-                                isSaving = true
-
-
-                                val corridaId = db.collection("corridas").document().id
-
-
-                                val novaCorrida = Corrida(
-                                    id = corridaId,
-                                    userId = user.uid,
-                                    distanciaKm = distancia,
-                                    tempo = tempo,
-                                    pace = pace
-                                    // A data é gerada automaticamente na classe Corrida
-                                )
-
-
-                                db.collection("corridas").document(corridaId)
-                                    .set(novaCorrida)
-                                    .addOnSuccessListener {
-                                        isSaving = false
-                                        Toast.makeText(context, "Corrida salva com sucesso!", Toast.LENGTH_SHORT).show()
-
-                                        onFinishNavigation()
-                                    }
-                                    .addOnFailureListener { e ->
-                                        isSaving = false
-                                        Toast.makeText(context, "Erro ao salvar: ${e.message}", Toast.LENGTH_LONG).show()
-                                    }
-                            } else {
-                                Toast.makeText(context, "Erro: Usuário não logado", Toast.LENGTH_SHORT).show()
-                            }},
+                        onClick = {
+                            viewModel.finalizarESalvarCorrida()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0FDC52)),
                         shape = RoundedCornerShape(50),
-                        enabled = !isSaving
+                        enabled = !saveState.isLoading
                     ) {
-                        Text("Finalizar", color = Color.White, fontWeight = FontWeight.Bold)
+                        if (saveState.isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                        } else {
+                            Text("Finalizar", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -190,7 +192,8 @@ fun BlocoDados(valor: String, label: String) {
         }
     }
 }
-@Preview (showBackground = true)
+
+@Preview(showBackground = true)
 @Composable
 fun AtividadeAfterScreenPreview() {
     PegaPistaTheme {
