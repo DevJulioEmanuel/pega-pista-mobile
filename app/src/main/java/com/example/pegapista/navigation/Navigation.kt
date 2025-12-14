@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navigation
 import com.example.pegapista.ui.*
 import com.google.firebase.auth.FirebaseAuth
 
@@ -64,6 +65,7 @@ fun NavigationGraph(
             )
         }
 
+
         composable("AtividadeBefore") {
             AtividadeBeforeScreen(
                 onStartActivity = { navController.navigate("AtividadeAfter") }
@@ -74,13 +76,21 @@ fun NavigationGraph(
             AtividadeAfterScreen()
         }
 
+
+
         composable("comunidade") {
-            FeedScreen()
+            FeedScreen(
+                onRankingScreen = { navController.navigate("Ranking") }
+            )
         }
 
-        composable("ranking") {
-            // RankingScreen()
+        composable("Ranking") {
+            RankingScreen(
+                // Alterado para voltar atrás corretamente
+                onFeedScreen = { navController.popBackStack() }
+            )
         }
+
 
         composable("perfil") {
             PerfilScreen()

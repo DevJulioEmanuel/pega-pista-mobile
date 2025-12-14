@@ -5,6 +5,7 @@ import com.example.pegapista.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,7 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Button
@@ -77,6 +80,7 @@ fun AtividadeAfterScreen(
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
+    val scrollState = rememberScrollState()
 
 
     var isSaving by remember { mutableStateOf(false) }
@@ -108,6 +112,7 @@ fun AtividadeAfterScreen(
             // CONTEÚDO DENTRO DO CARD
             Column(
                 modifier = Modifier
+                    .verticalScroll(scrollState)
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -132,7 +137,9 @@ fun AtividadeAfterScreen(
 
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
 
