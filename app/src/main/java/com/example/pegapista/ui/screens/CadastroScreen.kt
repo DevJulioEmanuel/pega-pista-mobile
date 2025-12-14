@@ -19,6 +19,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,24 +37,38 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.R
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.example.pegapista.ui.viewmodels.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun CadastroScreen(modifier: Modifier = Modifier,
-                   onCadastroSucesso: () -> Unit) {
+fun CadastroScreen(
+    modifier: Modifier = Modifier,
+    onCadastroSucesso: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
+) {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var confirmarSenha by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
-    val db = FirebaseFirestore.getInstance()
 
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState) {
+        if (uiState.error != null) {
+            Toast.makeText(context, uiState.error, Toast.LENGTH_SHORT).show()
+        }
+        if (uiState.isSuccess) {
+            Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_LONG).show()
+            onCadastroSucesso()
+            viewModel.resetState()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -125,57 +141,7 @@ fun CadastroScreen(modifier: Modifier = Modifier,
 
             ButtonCadastrar(
                 onClick = {
-
-                    if (nome.isEmpty() || email.isEmpty() || senha.isEmpty()) {
-                        Toast.makeText(context, "Preencha todos os campos!", Toast.LENGTH_SHORT).show()
-                        return@ButtonCadastrar
-                    }
-
-                    if (senha != confirmarSenha) {
-                        Toast.makeText(context, "As senhas não coincidem!", Toast.LENGTH_SHORT).show()
-                        return@ButtonCadastrar
-                    }
-
-                    if (senha.length < 6) {
-                        Toast.makeText(context, "A senha deve ter pelo menos 6 caracteres", Toast.LENGTH_SHORT).show()
-                        return@ButtonCadastrar
-                    }
-
-                    // 2. Criar utilizador no Firebase Auth
-                    isLoading = true
-                    auth.createUserWithEmailAndPassword(email, senha)
-                        .addOnSuccessListener { authResult ->
-
-                            val userId = authResult.user?.uid
-
-                            if (userId != null) {
-                                // Cria um "mapa" de dados para salvar
-                                val usuarioMap = hashMapOf(
-                                    "nome" to nome,
-                                    "email" to email,
-                                    "uid" to userId
-                                )
-
-                                // Salva na coleção "usuarios", no documento com o ID do utilizador
-                                db.collection("usuarios").document(userId)
-                                    .set(usuarioMap)
-                                    .addOnSuccessListener {
-                                        isLoading = false
-                                        Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_LONG).show()
-
-                                        onCadastroSucesso()
-                                    }
-                                    .addOnFailureListener { e ->
-                                        isLoading = false
-                                        Toast.makeText(context, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
-                                    }
-                            }
-                        }
-                        .addOnFailureListener { exception ->
-                            isLoading = false
-
-                            Toast.makeText(context, "Erro no cadastro: ${exception.message}", Toast.LENGTH_LONG).show()
-                        }
+                    viewModel.cadastrar(nome, email, senha, confirmarSenha)
                 }
             )
         }

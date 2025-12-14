@@ -1,4 +1,4 @@
-package com.example.pegapista.data
+package com.example.pegapista.data.models
 
 import com.google.firebase.Timestamp
 import java.util.Date
@@ -9,5 +9,5 @@ data class Corrida(
     val distanciaKm: Double = 0.0,
     val tempo: String = "",
     val pace: String = "",
-    val data: Timestamp = Timestamp(Date())
+    val data: Long = System.currentTimeMillis()
 )

@@ -22,6 +22,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,22 +40,36 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.example.pegapista.ui.viewmodels.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier.background(MaterialTheme.colorScheme.primary),
     onVoltarClick: () -> Unit,
-    onEntrarHome: () -> Unit
-
+    onEntrarHome: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     val context = LocalContext.current
-    var isLoading by remember { mutableStateOf(false) }
-    val auth = FirebaseAuth.getInstance()
+
+    LaunchedEffect(uiState) {
+        if (uiState.error != null) {
+            Toast.makeText(context, uiState.error, Toast.LENGTH_LONG).show()
+        }
+        if (uiState.isSuccess) {
+            Toast.makeText(context, "Bem-vindo!", Toast.LENGTH_SHORT).show()
+            onEntrarHome()
+            viewModel.resetState() // Limpa o estado para não rodar de novo ao voltar
+        }
+    }
+
     Column (
         modifier = modifier
             .fillMaxSize()
@@ -92,27 +108,7 @@ fun LoginScreen(
         Spacer(Modifier.height(40.dp))
         ButtonEntrar(
             onClick = {
-                if (email.isNotEmpty() && senha.isNotEmpty()) {
-                    isLoading = true
-                    Log.d("LOGIN","Tentando logar com: $email")
-
-                    auth.signInWithEmailAndPassword(email, senha)
-                        .addOnSuccessListener{
-                            isLoading = false
-                            Log.d("LOGIN", "Sucesso! Indo para a home")
-                            Toast.makeText(context, "Bem-vindo de volta!", Toast.LENGTH_SHORT).show()
-                            onEntrarHome()
-                        }
-                        .addOnFailureListener { exception -> // <--- ADICIONEI O TRATAMENTO DE ERRO
-                            isLoading = false
-                            Log.e("LOGIN", "Erro: ${exception.message}")
-                            Toast.makeText(context, "Erro: Verifique e-mail e senha", Toast.LENGTH_LONG).show()
-                        }
-
-                } else {
-                    Toast.makeText(context, "Os campos não podem estar vazios", Toast.LENGTH_SHORT)
-                        .show()
-                }
+                viewModel.login(email, senha)
             }
         )
     }
@@ -187,7 +183,7 @@ fun LoginScreenPreview() {
     PegaPistaTheme {
         LoginScreen(
             onVoltarClick = {},
-            onEntrarHome = {}// Chaves vazias = "não faças nada, é só um teste"
+            onEntrarHome = {}
 
         )
     }
