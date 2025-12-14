@@ -1,5 +1,6 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,9 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +19,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -35,16 +37,38 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.R
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.example.pegapista.ui.viewmodels.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun CadastroScreen(modifier: Modifier = Modifier) {
+fun CadastroScreen(
+    modifier: Modifier = Modifier,
+    onCadastroSucesso: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
+) {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var confirmarSenha by remember { mutableStateOf("") }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState) {
+        if (uiState.error != null) {
+            Toast.makeText(context, uiState.error, Toast.LENGTH_SHORT).show()
+        }
+        if (uiState.isSuccess) {
+            Toast.makeText(context, "Conta criada com sucesso!", Toast.LENGTH_LONG).show()
+            onCadastroSucesso()
+            viewModel.resetState()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -117,14 +141,12 @@ fun CadastroScreen(modifier: Modifier = Modifier) {
 
             ButtonCadastrar(
                 onClick = {
-                    // Lógica de validação e cadastro aqui
-
+                    viewModel.cadastrar(nome, email, senha, confirmarSenha)
                 }
             )
         }
     }
 }
-
 @Composable
 fun CampoCadastro(
     value: String,
@@ -187,6 +209,8 @@ fun ButtonCadastrar(onClick: () -> Unit) {
 @Composable
 fun CadastroScreenPreview() {
     PegaPistaTheme {
-        CadastroScreen()
+        CadastroScreen(
+            onCadastroSucesso = {}
+        )
     }
 }
