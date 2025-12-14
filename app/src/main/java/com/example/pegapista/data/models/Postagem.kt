@@ -1,4 +1,4 @@
-package com.example.pegapista.data
+package com.example.pegapista.data.models
 
 data class Postagem (
     val Usuario: String,

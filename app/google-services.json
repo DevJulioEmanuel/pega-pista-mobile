@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "800822141654",
+    "project_id": "pegapista",
+    "storage_bucket": "pegapista.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:800822141654:android:0bce99c2a7d4e577309f77",
+        "android_client_info": {
+          "package_name": "com.example.pegapista"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANArK41y8LDznYPD5sqW_u4ca_IRfSmxs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

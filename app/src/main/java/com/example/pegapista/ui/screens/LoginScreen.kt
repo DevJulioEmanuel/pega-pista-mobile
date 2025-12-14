@@ -1,5 +1,7 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
+import android.widget.Toast
+import android.util.Log
 import com.example.pegapista.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,6 +22,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -35,16 +40,35 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.example.pegapista.ui.viewmodels.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier.background(MaterialTheme.colorScheme.primary),
     onVoltarClick: () -> Unit,
-    onEntrarHome: () -> Unit
-
+    onEntrarHome: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState) {
+        if (uiState.error != null) {
+            Toast.makeText(context, uiState.error, Toast.LENGTH_LONG).show()
+        }
+        if (uiState.isSuccess) {
+            Toast.makeText(context, "Bem-vindo!", Toast.LENGTH_SHORT).show()
+            onEntrarHome()
+            viewModel.resetState() // Limpa o estado para não rodar de novo ao voltar
+        }
+    }
 
     Column (
         modifier = modifier
@@ -70,23 +94,38 @@ fun LoginScreen(
             modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
         )
         Spacer(Modifier.height(25.dp))
-        Textsfields(modifier, "E-mail")
+        Textsfields(
+            value = email,
+            onValueChange = {email = it},
+            placeholder = "Email"
+        )
         Spacer(Modifier.height(15.dp))
-        Textsfields(modifier, placeholder = "Senha")
+        Textsfields(
+            value = senha,
+            onValueChange = { senha = it },
+            placeholder = "Senha"
+        )
         Spacer(Modifier.height(40.dp))
-        ButtonEntrar(onEntrarHome)
+        ButtonEntrar(
+            onClick = {
+                viewModel.login(email, senha)
+            }
+        )
     }
 }
 
 @Composable
-fun Textsfields(modifier: Modifier, placeholder: String) {
+fun Textsfields(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String
+) {
     val isPassword = placeholder == "Senha"
     val visualTransformation =
         if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
-    var value by remember { mutableStateOf("") }
     OutlinedTextField(
         value = value,
-        onValueChange = { value = it },
+        onValueChange = onValueChange,
         placeholder = {
             Text(
                 text = placeholder,
@@ -116,10 +155,10 @@ fun Textsfields(modifier: Modifier, placeholder: String) {
 
 @Composable
 fun ButtonEntrar(
-    onEntrarHome: () -> Unit
+    onClick: () -> Unit
 ) {
     Button(
-        onClick = onEntrarHome,
+        onClick = onClick,
         modifier = Modifier
             .padding(horizontal = 30.dp)
             .shadow(
@@ -144,7 +183,7 @@ fun LoginScreenPreview() {
     PegaPistaTheme {
         LoginScreen(
             onVoltarClick = {},
-            onEntrarHome = {}// Chaves vazias = "não faças nada, é só um teste"
+            onEntrarHome = {}
 
         )
     }

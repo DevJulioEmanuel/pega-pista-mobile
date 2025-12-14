@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pegapista.navigation.NavigationGraph
-import com.example.pegapista.ui.BottomBar
+import com.example.pegapista.ui.screens.BottomBar
 
 @Composable
 fun PegaPistaScreen() {

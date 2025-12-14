@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -31,19 +32,24 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
+}
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
-
-    implementation("com.google.maps.android:maps-compose:4.3.0")
+    // --- Mapas e Localização ---
+    implementation("com.google.maps.android:maps-compose:6.2.1")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
-    implementation ("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    // Nota: Tinhas "libs.play.services.maps" repetido em baixo, removi para limpar.
+
+    // --- Android Core & Compose ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -53,9 +59,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.foundation.layout)
-    implementation("androidx.compose.material:material-icons-extended:1.7.5")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.play.services.maps) //JULIO: ICONS
+    // Se usares a versão do catalogo para navegação, podes remover a linha v277 abaixo
+    // implementation(libs.androidx.navigation.compose.v277)
+
+    // --- FIREBASE (A Correção) ---
+    // 1. O BoM gere as versões (MANTÉM ISTO)
+    implementation(platform(libs.firebase.bom))
+    // Implementação de login e senha
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    // 3. ADICIONA isto para garantir que o Firebase inicializa (opcional, mas recomendado):
+    implementation("com.google.firebase:firebase-analytics")
+    implementation(libs.androidx.compose.runtime.livedata)
+
+    // --- Testes ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,5 +83,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
 }

@@ -1,4 +1,4 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
