@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Button
@@ -67,17 +69,18 @@ import kotlin.math.sin
 fun HomeScreen(
     onIniciarCorrida: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = painterResource(R.drawable.logo_aplicativo),
-            contentDescription = "Logo do aplicativo",
-            modifier = Modifier.size(200.dp)
-        )
+//        Image(
+//            painter = painterResource(R.drawable.logo_aplicativo),
+//            contentDescription = "Logo do aplicativo",
+//            modifier = Modifier.size(80.dp)
+//        )
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
@@ -88,7 +91,9 @@ fun HomeScreen(
                 .weight(1.5f)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(scrollState)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -143,7 +148,7 @@ fun HomeScreen(
 
                 }
                 // ESPAÇAMENTO ENTRE TOPICOS
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(35.dp))
 
 // --- LINHA DO MEIO (SEU RANK vs AMIGOS) ---
                 Row(
@@ -206,12 +211,10 @@ fun HomeScreen(
                             // BARRA 2: Claudio (Um pouco menor - 85% do espaço)
                             ItemRanking(posicao = "02º", nome = "Claudio Leite", largura = 0.85f)
 
-                            // BARRA 3: Roberto (A menor - 70% do espaço)
-                            ItemRanking(posicao = "03º", nome = "Roberto Carlos", largura = 0.70f)
                         }
                     }
                 // --- ESPAÇO DEPOIS DO RANKING ---
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(35.dp))
 
 
                 Text(
@@ -228,18 +231,18 @@ fun HomeScreen(
                     // --- LISTA DE ATIVIDADES (Usando o componente que criamos) ---
                 ItemAtividade("Marina Sena", "5.0 km em 25:00 min")
                 ItemAtividade("Claudia Leite", "6.5 km em 32:40 min")
-                ItemAtividade("Roberto Carlos", "12 km em 48:20 min")
+                ItemAtividade("Molodoy", "10.5 km em 33:40 min")
 
 
         // Este Spacer é mágico: ele ocupa TODO o espaço vazio que sobrar, empurrando o botão lá para baixo
                 Spacer(modifier = Modifier.weight(1f))
 
-                Spacer(modifier = Modifier.height(0.dp))
+                Spacer(modifier = Modifier.height(22.dp))
 // --- BOTÃO INICIAR CORRIDA ---
                 Button(
                     onClick = onIniciarCorrida,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF039BE5)
+                        containerColor = Color(0xFF017BB6)
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
