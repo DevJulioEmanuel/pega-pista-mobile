@@ -84,61 +84,43 @@ fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
 
 
 
-    Column(
+//    Column(
+//
+//        modifier = Modifier
+//
+//            .background(Color.White)
+//
+//            .fillMaxSize() // Garante que a tela base ocupe tudo
+//
+//            .verticalScroll(scrollState) // 2. Habilita a rolagem vertical
+//
+//    ) {
 
-        modifier = Modifier
 
-            .background(Color.White)
-
-            .fillMaxSize() // Garante que a tela base ocupe tudo
-
-            .verticalScroll(scrollState) // 2. Habilita a rolagem vertical
-
-    ) {
-
-        Image(
-
-            painter = painterResource(R.drawable.logo_aplicativo),
-
-            contentDescription = "",
-
-            modifier = Modifier
-
-                .size(125.dp)
-
-                .align(Alignment.CenterHorizontally)
-
-                .padding(vertical = 10.dp) // Um pouco de respiro na logo
-
-        )
 
 
 
         Column(
 
             modifier = modifier
-
-                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
-
-                .clip(RoundedCornerShape(20.dp))
-
-// 3. MUDANÇA IMPORTANTE: Removemos fillMaxSize() e usamos fillMaxWidth()
-
-// Dentro de uma ScrollView, fillMaxSize pode causar bugs de altura infinita.
-
-                .fillMaxWidth()
-
+                .padding(20.dp)
+                .clip(RoundedCornerShape(5.dp))
+              //  .fillMaxWidth()
+                .fillMaxSize()
+                //.fillMaxHeight()
                 .background(MaterialTheme.colorScheme.primary),
 
-            verticalArrangement = Arrangement.Center,
+           // verticalArrangement = Arrangement.Center,
 
             horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
+            Spacer(modifier = Modifier.height(35.dp))
 
             TopPerfil(usuarioExemplo)
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(5.dp))
+
 
             MetadadosPerfil(usuarioExemplo)
 
@@ -150,7 +132,7 @@ fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
 
     }
 
-}
+//}
 
 
 
@@ -232,7 +214,7 @@ fun MetadadosPerfil(user: Usuario) {
 
         )
 
-        Spacer(Modifier.height(15.dp))
+        Spacer(Modifier.height(45.dp))
 
         Box(modifier = Modifier
 
@@ -270,7 +252,7 @@ fun MetadadosPerfil(user: Usuario) {
 
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(35.dp))
 
 
 

@@ -75,15 +75,10 @@ fun AtividadeAfterScreen(
     distancia: Double = 3.50,
     tempo: String = "28:30",
     pace: String = "5:45",
-    onFinishNavigation: () -> Unit = {}
+    onFinishActivity: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val db = FirebaseFirestore.getInstance()
-    val auth = FirebaseAuth.getInstance()
     val scrollState = rememberScrollState()
 
-
-    var isSaving by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -148,47 +143,15 @@ fun AtividadeAfterScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
                         shape = RoundedCornerShape(50)
                     ) {
-                        Text("Pausar", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Pausar", color = Color.White, fontWeight = FontWeight.Bold)
                     }
 
                     // Botão Finalizar (Verde)
                     Button(
-                        onClick = { val user = auth.currentUser
-                            if (user != null && !isSaving) {
-                                isSaving = true
-
-
-                                val corridaId = db.collection("corridas").document().id
-
-
-                                val novaCorrida = Corrida(
-                                    id = corridaId,
-                                    userId = user.uid,
-                                    distanciaKm = distancia,
-                                    tempo = tempo,
-                                    pace = pace
-                                    // A data é gerada automaticamente na classe Corrida
-                                )
-
-
-                                db.collection("corridas").document(corridaId)
-                                    .set(novaCorrida)
-                                    .addOnSuccessListener {
-                                        isSaving = false
-                                        Toast.makeText(context, "Corrida salva com sucesso!", Toast.LENGTH_SHORT).show()
-
-                                        onFinishNavigation()
-                                    }
-                                    .addOnFailureListener { e ->
-                                        isSaving = false
-                                        Toast.makeText(context, "Erro ao salvar: ${e.message}", Toast.LENGTH_LONG).show()
-                                    }
-                            } else {
-                                Toast.makeText(context, "Erro: Usuário não logado", Toast.LENGTH_SHORT).show()
-                            }},
+                        onClick = { onFinishActivity},
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0FDC52)),
                         shape = RoundedCornerShape(50),
-                        enabled = !isSaving
+
                     ) {
                         Text("Finalizar", color = Color.White, fontWeight = FontWeight.Bold)
                     }
