@@ -23,7 +23,7 @@ import com.example.pegapista.R
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.example.pegapista.data.Corrida
+import com.example.pegapista.data.models.Corrida
 
 
 

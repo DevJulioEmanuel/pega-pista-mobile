@@ -1,4 +1,4 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
 import android.widget.Toast
 import android.util.Log
@@ -35,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pegapista.R
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.AuthViewModel
@@ -65,86 +66,8 @@ fun LoginScreen(
     }
 
     Column (
-
-
-    // 1. Estado da rolagem para telas pequenas
-//    val scrollState = rememberScrollState()
-
-    // 2. Box Principal (Fundo Azul) que ocupa a tela toda
-    Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center // Centraliza o cartão branco no meio da tela
-    ) {
-        // 3. Coluna do Cartão Branco (Agora com Scroll)
-        Column(
-            modifier = Modifier
-                .padding(20.dp) // Margem externa para não colar nas bordas
-                .widthIn(max = 400.dp) // Opcional: Evita que o cartão fique muito esticado em tablets
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(15.dp)
-                )
-                .padding(20.dp) // Padding interno do cartão (respiro para os elementos)
-                .verticalScroll(scrollState), // HABILITA O SCROLL AQUI
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(R.drawable.logo_aplicativo),
-                contentDescription = "Logo do aplicativo",
-                modifier = Modifier.size(150.dp) // Reduzi um pouco (200 era muito grande para telas pequenas)
-            )
-            Text(
-                text = "Login",
-                fontWeight = FontWeight.SemiBold,
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
-            )
-            Spacer(Modifier.height(25.dp))
-
-            // Campos de texto
-            Textsfields(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "Email"
-            )
-            Spacer(Modifier.height(15.dp))
-            Textsfields(
-                value = senha,
-                onValueChange = { senha = it },
-                placeholder = "Senha"
-            )
-            Spacer(Modifier.height(40.dp))
-
-            ButtonEntrar(
-                onClick = {
-                    if (email.isNotEmpty() && senha.isNotEmpty()) {
-                        isLoading = true
-                        Log.d("LOGIN", "Tentando logar com: $email")
-
-                        auth.signInWithEmailAndPassword(email, senha)
-                            .addOnSuccessListener {
-                                isLoading = false
-                                Log.d("LOGIN", "Sucesso! Indo para a home")
-                                Toast.makeText(context, "Bem-vindo de volta!", Toast.LENGTH_SHORT).show()
-                                onEntrarHome()
-                            }
-                            .addOnFailureListener { exception ->
-                                isLoading = false
-                                Log.e("LOGIN", "Erro: ${exception.message}")
-                                Toast.makeText(context, "Erro: Verifique e-mail e senha", Toast.LENGTH_LONG).show()
-                            }
-
-                    } else {
-                        Toast.makeText(context, "Os campos não podem estar vazios", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }
-            )
-        }
             .padding(start = 40.dp, end = 40.dp, top = 100.dp, bottom = 100.dp)
             .background(
                 color = MaterialTheme.colorScheme.surface,
@@ -203,7 +126,8 @@ fun Textsfields(
             Text(
                 text = placeholder,
                 fontSize = 14.sp
-            )},
+            )
+        },
         label = {
             Text(text = placeholder)
         },
@@ -256,6 +180,7 @@ fun LoginScreenPreview() {
         LoginScreen(
             onVoltarClick = {},
             onEntrarHome = {}
+
         )
     }
 }

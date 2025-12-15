@@ -1,4 +1,4 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
 import android.widget.Toast
 import com.example.pegapista.R
@@ -69,7 +69,7 @@ import com.example.pegapista.ui.theme.PegaPistaTheme
 import kotlin.math.sin
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.example.pegapista.data.Corrida
+import com.example.pegapista.data.models.Corrida
 @Composable
 fun AtividadeAfterScreen(
     distancia: Double = 3.50,
@@ -124,9 +124,9 @@ fun AtividadeAfterScreen(
                 )
 
 
-                BlocoDados(valor ="$distancia", label = "km")
-                BlocoDados(valor = "28:30", label = "min")
-                BlocoDados(valor = "5:45", label = "ritmo médio atual")
+                BlocoDados(valor = distanciaKmExibicao, label = "Km")
+                BlocoDados(valor = tempoExibicao, label = "Tempo")
+                BlocoDados(valor = paceAtual, label = "Ritmo (min/km)")
 
                 Spacer(modifier = Modifier.height(40.dp))
 
@@ -162,7 +162,7 @@ fun AtividadeAfterScreen(
 }
 
 @Composable
-fun BlocoDados(valor: String, label: String) {
+fun BlocoDados(valor: Int, label: String) {
     Surface(
         color = Color(0xFF0288D1),
         shape = RoundedCornerShape(16.dp),
@@ -192,6 +192,6 @@ fun BlocoDados(valor: String, label: String) {
 @Composable
 fun AtividadeAfterScreenPreview() {
     PegaPistaTheme {
-        AtividadeAfterScreen()
+        _root_ide_package_.com.example.pegapista.ui.screens.AtividadeAfterScreen()
     }
 }

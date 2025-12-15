@@ -1,16 +1,10 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
-import android.widget.Button
 import androidx.compose.foundation.Image
 
 import androidx.compose.foundation.background
 
 import androidx.compose.foundation.border
-
-import androidx.compose.foundation.layout.* // Importa tudo de layout
-
-import androidx.compose.foundation.rememberScrollState
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+
+
+import androidx.compose.foundation.layout.* // Importa tudo de layout
+
+import androidx.compose.foundation.rememberScrollState
+
 import androidx.compose.foundation.shape.CircleShape
 
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,8 +45,10 @@ import androidx.compose.ui.unit.sp
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
-
+import com.example.pegapista.R
+import com.example.pegapista.data.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
+
 
 
 
@@ -86,8 +88,9 @@ fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
 
 
 
-        Column(
 
+
+        Column(
             modifier = modifier
                 .padding(20.dp)
                 .clip(RoundedCornerShape(5.dp))
@@ -205,7 +208,9 @@ fun MetadadosPerfil(user: Usuario) {
         ) {
 
             BoxText("Distância Total", user.DistanciaTotal)
+
             BoxText("Tempo Total", user.TempoTotal)
+
         }
 
 
