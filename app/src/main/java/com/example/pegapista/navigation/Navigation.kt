@@ -19,6 +19,7 @@ import com.example.pegapista.ui.*
 import com.google.firebase.auth.FirebaseAuth
 
 
+
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
@@ -32,7 +33,7 @@ fun NavigationGraph(
     val destinoInicial = if (usuarioAtual != null) "Home" else "inicio"
     NavHost(
         navController = navController,
-        startDestination = destinoInicial,
+        startDestination = "inicio",
         modifier = modifier
     ) {
 

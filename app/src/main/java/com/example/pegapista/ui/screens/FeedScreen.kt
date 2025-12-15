@@ -1,5 +1,7 @@
-package com.example.pegapista.ui
+package com.example.pegapista.ui.screens
 
+import android.widget.Button
+import androidx.compose.foundation.BorderStroke
 import android.widget.Button
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
