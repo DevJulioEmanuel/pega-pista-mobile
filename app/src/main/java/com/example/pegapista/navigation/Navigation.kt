@@ -73,10 +73,15 @@ fun NavigationGraph(
         }
 
         composable("AtividadeAfter") {
-            AtividadeAfterScreen()
+            AtividadeAfterScreen(
+                onFinishActivity = {navController.navigate("Post")}
+            )
         }
-
-
+        composable ("Post"){
+            RunFinishedScreen(
+                onFinishNavigation =  {navController.navigate("Home")}
+            )
+        }
 
         composable("comunidade") {
             FeedScreen(
@@ -86,7 +91,7 @@ fun NavigationGraph(
 
         composable("Ranking") {
             RankingScreen(
-                // Alterado para voltar atrás corretamente
+
                 onFeedScreen = { navController.popBackStack() }
             )
         }
