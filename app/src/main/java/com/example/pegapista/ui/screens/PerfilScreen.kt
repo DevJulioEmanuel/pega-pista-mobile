@@ -1,8 +1,16 @@
-package com.example.pegapista.ui.screens
+package com.example.pegapista.ui
 
+import android.widget.Button
 import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.background
+
 import androidx.compose.foundation.border
+
+import androidx.compose.foundation.layout.* // Importa tudo de layout
+
+import androidx.compose.foundation.rememberScrollState
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +22,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+
 import androidx.compose.foundation.shape.RoundedCornerShape
+
+import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +45,10 @@ import androidx.compose.ui.unit.sp
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
+
+import com.example.pegapista.ui.theme.PegaPistaTheme
+
+
 
 @Composable
 fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
@@ -44,35 +61,75 @@ fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
         DiasSeguidos = 3,
         RecordDiasSeguidos = 6
     )
-    Column(
-        modifier = Modifier.background(Color.White)
-    ) {
-        Image(
-            painter = painterResource(R.drawable.logo_aplicativo),
-            contentDescription = "",
-            modifier = Modifier.size(125.dp).align(Alignment.CenterHorizontally)
-        )
+
+
+
+// 1. Criamos o estado da rolagem
+
+    val scrollState = rememberScrollState()
+
+
+
+//    Column(
+//
+//        modifier = Modifier
+//
+//            .background(Color.White)
+//
+//            .fillMaxSize() // Garante que a tela base ocupe tudo
+//
+//            .verticalScroll(scrollState) // 2. Habilita a rolagem vertical
+//
+//    ) {
+
+
+
+
 
         Column(
+
             modifier = modifier
-                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .padding(20.dp)
+                .clip(RoundedCornerShape(5.dp))
+              //  .fillMaxWidth()
                 .fillMaxSize()
+                //.fillMaxHeight()
                 .background(MaterialTheme.colorScheme.primary),
-            verticalArrangement = Arrangement.Center,
+
+           // verticalArrangement = Arrangement.Center,
+
             horizontalAlignment = Alignment.CenterHorizontally
+
         ) {
+            Spacer(modifier = Modifier.height(35.dp))
+
             TopPerfil(usuarioExemplo)
-            Spacer(Modifier.height(10.dp))
+
+            Spacer(modifier = Modifier.height(5.dp))
+
+
             MetadadosPerfil(usuarioExemplo)
+
+// Adicionei um Spacer no final para dar um respiro no fundo do cartão azul
+
+            Spacer(Modifier.height(20.dp))
+
         }
+
     }
-}
+
+//}
+
+
 
 @Composable
+
 fun TopPerfil(user: Usuario) {
+
     Column (
+
         modifier = Modifier
+
             .padding(top = 15.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -98,7 +155,9 @@ fun TopPerfil(user: Usuario) {
 @Composable
 fun MetadadosPerfil(user: Usuario) {
     Column (
-        modifier = Modifier.fillMaxSize(),
+
+        modifier = Modifier.fillMaxWidth(), // Ajuste para largura total
+
         horizontalAlignment = Alignment.CenterHorizontally
     ){
 
@@ -108,9 +167,13 @@ fun MetadadosPerfil(user: Usuario) {
             fontWeight = FontWeight.ExtraBold,
             color = Color.White
         )
-        Spacer(Modifier.height(15.dp))
+
+        Spacer(Modifier.height(45.dp))
+
         Box(modifier = Modifier
-            .padding(start = 35.dp, end = 35.dp)
+
+            .padding(horizontal = 35.dp) // Simplifiquei o padding
+
             .fillMaxWidth()
             .shadow(
                 elevation = 5.dp,
@@ -126,12 +189,37 @@ fun MetadadosPerfil(user: Usuario) {
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        Spacer(Modifier.height(10.dp))
-        Row {
+
+        Spacer(Modifier.height(35.dp))
+
+
+
+// Linha 1 de Estatísticas
+
+        Row(
+
+            modifier = Modifier.fillMaxWidth(),
+
+            horizontalArrangement = Arrangement.SpaceEvenly // Distribui melhor os itens
+
+        ) {
+
             BoxText("Distância Total", user.DistanciaTotal)
             BoxText("Tempo Total", user.TempoTotal)
         }
-        Row {
+
+
+
+// Linha 2 de Estatísticas
+
+        Row(
+
+            modifier = Modifier.fillMaxWidth(),
+
+            horizontalArrangement = Arrangement.SpaceEvenly
+
+        ) {
+
             BoxText("Tempo Ritmo", user.TempoRitmo)
             BoxText("Calorias Queimadas", user.CaloriasQueimadas)
         }
@@ -142,7 +230,9 @@ fun MetadadosPerfil(user: Usuario) {
 fun BoxText(metadata: String, data: String) {
     Box(modifier = Modifier
         .padding(10.dp)
-        .size(120.dp)
+
+        .size(120.dp) // Cuidado: em telas muito estreitas, 120+120+paddings pode cortar.
+
         .shadow(
             elevation = 5.dp,
             shape = RoundedCornerShape(10.dp)
@@ -150,7 +240,9 @@ fun BoxText(metadata: String, data: String) {
         .background(Color.White)
         .clip(RoundedCornerShape(10.dp))
     ) {
-        Column (modifier = Modifier.fillMaxSize(),
+
+        Column (modifier = Modifier.fillMaxSize().padding(4.dp), // Padding interno extra
+
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center){
             Text(

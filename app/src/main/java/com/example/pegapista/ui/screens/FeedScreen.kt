@@ -1,5 +1,7 @@
-package com.example.pegapista.ui.screens
+package com.example.pegapista.ui
 
+import android.widget.Button
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +21,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.ModeComment
 import androidx.compose.material.icons.outlined.ModeComment
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -30,18 +35,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pegapista.data.models.Postagem
+import com.example.pegapista.data.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 
 @Composable
-fun FeedScreen(modifier: Modifier = Modifier.background(Color.White)) {
+fun FeedScreen(modifier: Modifier = Modifier.background(Color.White),
+onRankingScreen: () -> Unit) {
     val postagens = listOf(
         Postagem("Arthur Lelis", "Caminhada Vespertina", "2.0 km", "30:00 min"),
         Postagem("Daniel Jacó", "Caminhada Matutina","5.2 km", "50:15 min"),
@@ -53,7 +60,7 @@ fun FeedScreen(modifier: Modifier = Modifier.background(Color.White)) {
         Image(
             painter = painterResource(R.drawable.logo_aplicativo),
             contentDescription = "",
-            modifier = Modifier.size(150.dp).align(Alignment.CenterHorizontally)
+            modifier = Modifier.size(70.dp).align(Alignment.CenterHorizontally)
         )
 
         Column(
@@ -62,10 +69,30 @@ fun FeedScreen(modifier: Modifier = Modifier.background(Color.White)) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ){
+                Button(
+                    onClick = { /* Ir para tela feed */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF033BCC)),
+                    shape = RoundedCornerShape(50)
+                ){
+                    Text("Feed", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onRankingScreen,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFFFFF)),
+                    border = BorderStroke(2.dp, Color.Blue),
+                    shape = RoundedCornerShape(50)
+                ){
+                    Text("Ranking", color = Color.Blue, fontWeight = FontWeight.Bold)
+                }
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(postagens) { post ->
@@ -189,6 +216,6 @@ fun metadadosCorrida(dado: String, metadado: String) {
 @Composable
 fun FeedScreenPreview() {
     PegaPistaTheme {
-        FeedScreen()
+        FeedScreen(onRankingScreen = {})
     }
 }

@@ -14,6 +14,9 @@ import com.example.pegapista.ui.screens.InicioScreen
 import com.example.pegapista.ui.screens.LoginScreen
 import com.example.pegapista.ui.screens.NotificacoesScreen
 import com.example.pegapista.ui.screens.PerfilScreen
+import androidx.navigation.navigation
+import com.example.pegapista.ui.*
+import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
@@ -21,9 +24,15 @@ fun NavigationGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+
+    val auth = FirebaseAuth.getInstance()
+    val usuarioAtual = auth.currentUser
+
+
+    val destinoInicial = if (usuarioAtual != null) "Home" else "inicio"
     NavHost(
         navController = navController,
-        startDestination = "inicio",
+        startDestination = destinoInicial,
         modifier = modifier
     ) {
 
@@ -38,7 +47,7 @@ fun NavigationGraph(
             LoginScreen(
                 onVoltarClick = { navController.popBackStack() },
                 onEntrarHome = {
-                    // Remove o login da pilha para não voltar para ele
+
                     navController.navigate("Home") {
                         popUpTo("inicio") { inclusive = true }
                     }
@@ -49,8 +58,7 @@ fun NavigationGraph(
         composable("cadastro") {
             CadastroScreen(
                 onCadastroSucesso = {
-                    // Quando o cadastro termina, vai para a Home.
-                    // O popUpTo limpa a pilha para que o botão "Voltar" não retorne ao cadastro.
+
                     navController.navigate("Home") {
                         popUpTo("inicio") { inclusive = true }
                     }
@@ -66,6 +74,7 @@ fun NavigationGraph(
             )
         }
 
+
         composable("AtividadeBefore") {
             AtividadeBeforeScreen(
                 onStartActivity = { navController.navigate("AtividadeAfter") }
@@ -73,16 +82,29 @@ fun NavigationGraph(
         }
 
         composable("AtividadeAfter") {
-            AtividadeAfterScreen()
+            AtividadeAfterScreen(
+                onFinishActivity = {navController.navigate("Post")}
+            )
+        }
+        composable ("Post"){
+            RunFinishedScreen(
+                onFinishNavigation =  {navController.navigate("Home")}
+            )
         }
 
         composable("comunidade") {
-            FeedScreen()
+            FeedScreen(
+                onRankingScreen = { navController.navigate("Ranking") }
+            )
         }
 
-        composable("ranking") {
-            // RankingScreen()
+        composable("Ranking") {
+            RankingScreen(
+
+                onFeedScreen = { navController.popBackStack() }
+            )
         }
+
 
         composable("perfil") {
             PerfilScreen()
