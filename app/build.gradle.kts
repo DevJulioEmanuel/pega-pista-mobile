@@ -73,6 +73,8 @@ dependencies {
 
     // 3. ADICIONA isto para garantir que o Firebase inicializa (opcional, mas recomendado):
     implementation("com.google.firebase:firebase-analytics")
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.camera.core)
 
     // --- Testes ---
     testImplementation(libs.junit)
