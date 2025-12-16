@@ -2,8 +2,6 @@ package com.example.pegapista.ui.screens
 
 import android.widget.Button
 import androidx.compose.foundation.BorderStroke
-import android.widget.Button
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,9 +42,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pegapista.data.Postagem
+import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
+
+
 
 @Composable
 fun FeedScreen(modifier: Modifier = Modifier.background(Color.White),
@@ -77,14 +77,14 @@ onRankingScreen: () -> Unit) {
             ){
                 Button(
                     onClick = { /* Ir para tela feed */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF033BCC)),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(50)
                 ){
                     Text("Feed", color = Color.White, fontWeight = FontWeight.Bold)
                 }
                 Button(
                     onClick = onRankingScreen,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFFFFF)),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     border = BorderStroke(2.dp, Color.Blue),
                     shape = RoundedCornerShape(50)
                 ){
@@ -131,7 +131,7 @@ fun PostCard(post: Postagem) {
                 Spacer(Modifier.width(5.dp))
                 Column {
                     Text(
-                        text=post.Usuario,
+                        text=post.autorNome,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = Color.Gray
@@ -146,16 +146,16 @@ fun PostCard(post: Postagem) {
             Spacer(Modifier.height(15.dp))
             Column {
                 Text(
-                    text = post.Titulo,
+                    text = post.titulo,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Gray
                 )
                 Spacer(Modifier.height(12.dp))
                 Row {
-                    metadadosCorrida(post.Distancia, "Distancia")
+                    metadadosCorrida(post.corrida.distanciaKm.toString(), "Distancia")
                     Spacer(Modifier.width(50.dp))
-                    metadadosCorrida(post.Tempo, "Tempo")
+                    metadadosCorrida(post.corrida.tempo.toString(), "Tempo")
                     Spacer(Modifier.width(50.dp))
                     metadadosCorrida("4,5 km/min", "Ritmo")
                 }
