@@ -137,7 +137,7 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun formatarTempoParaString(segundos: Long): String {
+    fun formatarTempoParaString(segundos: Long): String {
         val horas = segundos / 3600
         val minutos = (segundos % 3600) / 60
         val segs = segundos % 60

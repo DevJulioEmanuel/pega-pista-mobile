@@ -1,15 +1,40 @@
 package com.example.pegapista.ui.screens
 
 import android.Manifest
+import android.net.http.SslCertificate.saveState
+import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.pegapista.R
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,26 +45,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pegapista.R
-import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.CorridaViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+
 
 @Composable
 fun AtividadeAfterScreen(
     viewModel: CorridaViewModel = viewModel(),
-    onFinishNavigation: () -> Unit = {}
+    onFinishActivity: (distancia: Double, tempo: String, pace: String) -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     val context = LocalContext.current
-    val saveState by viewModel.saveState.collectAsState()
 
     val distanciaMetros by viewModel.distancia.observeAsState(0f)
     val tempoSegundos by viewModel.tempoSegundos.observeAsState(0L)
     val paceAtual by viewModel.pace.observeAsState("-:--")
     val isRastreando by viewModel.isRastreando.observeAsState(false)
-
+    val saveState by viewModel.saveState.collectAsState()
     val distanciaKmExibicao = "%.2f".format(distanciaMetros / 1000)
 
     val tempoExibicao = remember(tempoSegundos) {
@@ -48,16 +71,6 @@ fun AtividadeAfterScreen(
         val segundos = tempoSegundos % 60
         if (horas > 0) "%d:%02d:%02d".format(horas, minutos, segundos)
         else "%02d:%02d".format(minutos, segundos)
-    }
-
-    LaunchedEffect(saveState) {
-        if (saveState.isSuccess) {
-            Toast.makeText(context, "Corrida salva com sucesso!", Toast.LENGTH_SHORT).show()
-            onFinishNavigation()
-        }
-        if (saveState.error != null) {
-            Toast.makeText(context, saveState.error, Toast.LENGTH_LONG).show()
-        }
     }
 
 
@@ -79,13 +92,22 @@ fun AtividadeAfterScreen(
         )
     }
 
+    LaunchedEffect(saveState) {
+        if (saveState.isSuccess) {
+            val distanciaKm = (distanciaMetros / 1000).toDouble()
+            val tempoFormatado = viewModel.formatarTempoParaString(tempoSegundos)
+
+            onFinishActivity(distanciaKm, tempoFormatado, paceAtual)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // LOGO
+
         Image(
             painter = painterResource(R.drawable.logo_aplicativo),
             contentDescription = "Logo do aplicativo",
@@ -93,6 +115,7 @@ fun AtividadeAfterScreen(
                 .size(150.dp)
                 .padding(bottom = 16.dp)
         )
+
 
         Card(
             shape = RoundedCornerShape(20.dp),
@@ -105,19 +128,22 @@ fun AtividadeAfterScreen(
         ) {
             Column(
                 modifier = Modifier
+                    .verticalScroll(scrollState)
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
 
+
                 Text(
-                    text = if (isRastreando) "CORRENDO!" else "CORRIDA PAUSADA",
+                    text = "Live",
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
+
 
                 BlocoDados(valor = distanciaKmExibicao, label = "Km")
                 BlocoDados(valor = tempoExibicao, label = "Tempo")
@@ -126,38 +152,30 @@ fun AtividadeAfterScreen(
                 Spacer(modifier = Modifier.height(40.dp))
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-
-                    // BOTÃO PAUSAR / RETOMAR
                     Button(
-                        onClick = { viewModel.toggleRastreamento() },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isRastreando) Color(0xFFFF5252) else Color(0xFFFF9800) // Vermelho ou Laranja
-                        ),
+                        onClick = { /* Ação de Pausar */ },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
                         shape = RoundedCornerShape(50)
                     ) {
-                        Text(
-                            text = if (isRastreando) "Pausar" else "Retomar",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
+                            Text("Pausar", color = Color.White, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
                         onClick = {
-                            viewModel.finalizarESalvarCorrida()
-                        },
+                            val distanciaKm = (distanciaMetros / 1000).toDouble()
+                            val tempoFormatado = viewModel.formatarTempoParaString(tempoSegundos)
+                            onFinishActivity(distanciaKm, tempoFormatado, paceAtual)
+                                  },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0FDC52)),
                         shape = RoundedCornerShape(50),
-                        enabled = !saveState.isLoading
+
                     ) {
-                        if (saveState.isLoading) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
-                        } else {
-                            Text("Finalizar", color = Color.White, fontWeight = FontWeight.Bold)
-                        }
+                        Text("Finalizar", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -192,11 +210,10 @@ fun BlocoDados(valor: String, label: String) {
         }
     }
 }
-
-@Preview(showBackground = true)
+@Preview (showBackground = true)
 @Composable
 fun AtividadeAfterScreenPreview() {
     PegaPistaTheme {
-        AtividadeAfterScreen()
+        AtividadeAfterScreen(onFinishActivity = {} as (Double, String, String) -> Unit)
     }
 }

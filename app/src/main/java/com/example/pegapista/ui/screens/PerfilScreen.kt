@@ -45,8 +45,6 @@ import androidx.compose.ui.unit.sp
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
-import com.example.pegapista.R
-import com.example.pegapista.data.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
 
 
