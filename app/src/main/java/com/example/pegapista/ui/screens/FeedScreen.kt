@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,11 +28,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,20 +47,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
-
+import com.example.pegapista.ui.viewmodels.PostViewModel
 
 
 @Composable
-fun FeedScreen(modifier: Modifier = Modifier.background(Color.White),
-onRankingScreen: () -> Unit) {
-    val postagens = listOf(
-        Postagem("Arthur Lelis", "Caminhada Vespertina", "2.0 km", "30:00 min"),
-        Postagem("Daniel Jacó", "Caminhada Matutina","5.2 km", "50:15 min"),
-        Postagem("Henrique Mendes", "Correndo com amigos","3.0 km", "30:00 min"),
-        )
+fun FeedScreen(
+    modifier: Modifier = Modifier.background(Color.White),
+    onRankingScreen: () -> Unit,
+    viewModel: PostViewModel = viewModel()
+) {
+    val postagens by viewModel.feedState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.carregarFeed()
+    }
+
+
     Column(
         modifier = Modifier.background(Color.White)
     ) {
@@ -76,7 +87,7 @@ onRankingScreen: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ){
                 Button(
-                    onClick = { /* Ir para tela feed */ },
+                    onClick = { viewModel.carregarFeed() },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(50)
                 ){
@@ -91,16 +102,23 @@ onRankingScreen: () -> Unit) {
                     Text("Ranking", color = Color.Blue, fontWeight = FontWeight.Bold)
                 }
             }
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(postagens) { post ->
-                    PostCard(post)
+            if (postagens.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Nenhuma corrida ainda...", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(postagens) { post ->
+                        PostCard(post)
+                    }
                 }
             }
+
+
         }
     }
 }
@@ -134,12 +152,12 @@ fun PostCard(post: Postagem) {
                         text=post.autorNome,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        color = Color.Gray
+                        color = Color.DarkGray
                     )
                     Text(
-                        text="Correu há 2 horas",
+                        text="Atleta PegaPista",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = Color.DarkGray
                     )
                 }
             }
@@ -149,15 +167,15 @@ fun PostCard(post: Postagem) {
                     text = post.titulo,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Gray
+                    color = Color.DarkGray
                 )
                 Spacer(Modifier.height(12.dp))
                 Row {
-                    metadadosCorrida(post.corrida.distanciaKm.toString(), "Distancia")
+                    metadadosCorrida("%.2f km".format(post.corrida.distanciaKm), "Distância")
                     Spacer(Modifier.width(50.dp))
-                    metadadosCorrida(post.corrida.tempo.toString(), "Tempo")
+                    metadadosCorrida(post.corrida.tempo, "Tempo")
                     Spacer(Modifier.width(50.dp))
-                    metadadosCorrida("4,5 km/min", "Ritmo")
+                    metadadosCorrida(post.corrida.pace, "Ritmo")
                 }
             }
             Spacer(Modifier.height(15.dp))
@@ -187,7 +205,7 @@ fun PostCard(post: Postagem) {
                     )
                 }
             }
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 0.dp),
                 thickness = 0.8.dp,
                 color = MaterialTheme.colorScheme.outlineVariant
@@ -202,13 +220,13 @@ fun metadadosCorrida(dado: String, metadado: String) {
         Text(
             text=metadado,
             fontSize = 12.sp,
-            color = Color.Gray
+            color = Color.DarkGray
         )
         Text(
             text=dado,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
-            color = Color.Gray
+            color = Color.DarkGray
         )
     }
 }

@@ -3,10 +3,9 @@ package com.example.pegapista.data.models
 data class Postagem(
     val id: String = "",
     val userId: String = "",
-    val autorNome: String = "",
+    val autorNome: String = "Corredor",
     val titulo: String = "",
     val descricao: String = "",
     val corrida: Corrida = Corrida(),
-    val dataPostagem: Long = System.currentTimeMillis(),
-    val likesCount: Int = 0
+    val data: Long = System.currentTimeMillis()
 )

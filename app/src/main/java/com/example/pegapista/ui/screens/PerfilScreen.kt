@@ -30,6 +30,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,95 +45,47 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
-
-
-
+import com.example.pegapista.ui.viewmodels.PerfilViewModel
 
 @Composable
-fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
-    val usuarioExemplo = Usuario(
-        nickname = "Daniel Jacó",
-        DistanciaTotal = "312 km",
-        TempoTotal = "01:15:30",
-        TempoRitmo = "06:02 min/km",
-        CaloriasQueimadas = "850 kcal",
-        DiasSeguidos = 3,
-        RecordDiasSeguidos = 6
-    )
-
-
-
-// 1. Criamos o estado da rolagem
-
+fun PerfilScreen(
+    modifier: Modifier = Modifier.background(Color.White),
+    viewModel: PerfilViewModel = viewModel()
+) {
+    val usuario by viewModel.userState.collectAsState()
     val scrollState = rememberScrollState()
-
-
-
-//    Column(
-//
-//        modifier = Modifier
-//
-//            .background(Color.White)
-//
-//            .fillMaxSize() // Garante que a tela base ocupe tudo
-//
-//            .verticalScroll(scrollState) // 2. Habilita a rolagem vertical
-//
-//    ) {
-
-
-
-
-
-
-
-        Column(
-            modifier = modifier
-                .padding(20.dp)
-                .clip(RoundedCornerShape(5.dp))
-              //  .fillMaxWidth()
-                .fillMaxSize()
-                //.fillMaxHeight()
-                .background(MaterialTheme.colorScheme.primary),
-
-           // verticalArrangement = Arrangement.Center,
-
-            horizontalAlignment = Alignment.CenterHorizontally
-
-        ) {
-            Spacer(modifier = Modifier.height(35.dp))
-
-            TopPerfil(usuarioExemplo)
-
-            Spacer(modifier = Modifier.height(5.dp))
-
-
-            MetadadosPerfil(usuarioExemplo)
-
-// Adicionei um Spacer no final para dar um respiro no fundo do cartão azul
-
-            Spacer(Modifier.height(20.dp))
-
-        }
-
+    LaunchedEffect(Unit) {
+        viewModel.carregarPerfil()
     }
+    Column(
+        modifier = modifier
+            .padding(20.dp)
+            .clip(RoundedCornerShape(5.dp))
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary)
+            .verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally
 
-//}
-
-
+    ) {
+        Spacer(modifier = Modifier.height(35.dp))
+        TopPerfil(usuario)
+        Spacer(modifier = Modifier.height(5.dp))
+        MetadadosPerfil(usuario)
+        Spacer(Modifier.height(20.dp))
+    }
+}
 
 @Composable
 
 fun TopPerfil(user: Usuario) {
 
     Column (
-
         modifier = Modifier
-
             .padding(top = 15.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -155,26 +110,27 @@ fun TopPerfil(user: Usuario) {
 
 @Composable
 fun MetadadosPerfil(user: Usuario) {
+    val distFormatada = "%.1f km".format(user.distanciaTotalKm)
+    val tempoFormatado = formatarHoras(user.tempoTotalSegundos)
+    val ritmoMedio = if (user.distanciaTotalKm > 0) {
+        val minutosTotais = user.tempoTotalSegundos / 60.0
+        val pace = minutosTotais / user.distanciaTotalKm
+        "%.2f min/km".format(pace)
+    } else "0:00 min/km"
+
     Column (
-
-        modifier = Modifier.fillMaxWidth(), // Ajuste para largura total
-
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-
         Text(
-            text = "${user.DiasSeguidos} dias!",
+            text = "${user.diasSeguidos} dias!",
             fontSize = 20.sp,
             fontWeight = FontWeight.ExtraBold,
             color = Color.White
         )
-
         Spacer(Modifier.height(45.dp))
-
         Box(modifier = Modifier
-
-            .padding(horizontal = 35.dp) // Simplifiquei o padding
-
+            .padding(horizontal = 35.dp)
             .fillMaxWidth()
             .shadow(
                 elevation = 5.dp,
@@ -184,47 +140,28 @@ fun MetadadosPerfil(user: Usuario) {
             .clip(RoundedCornerShape(10.dp))
         ) {
             Text(
-                text = "Seu recorde foi de ${user.RecordDiasSeguidos} dias seguidos!",
+                text = "Seu recorde foi de ${user.recordeDiasSeguidos} dias seguidos!",
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
                 modifier = Modifier.fillMaxWidth()
             )
         }
-
         Spacer(Modifier.height(35.dp))
-
-
-
-// Linha 1 de Estatísticas
-
         Row(
-
             modifier = Modifier.fillMaxWidth(),
-
-            horizontalArrangement = Arrangement.SpaceEvenly // Distribui melhor os itens
-
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-
-            BoxText("Distância Total", user.DistanciaTotal)
-
-            BoxText("Tempo Total", user.TempoTotal)
-
+            BoxText("Distância Total", distFormatada)
+            BoxText("Tempo Total", tempoFormatado)
         }
 
 
-
-// Linha 2 de Estatísticas
-
         Row(
-
             modifier = Modifier.fillMaxWidth(),
-
             horizontalArrangement = Arrangement.SpaceEvenly
-
         ) {
-
-            BoxText("Tempo Ritmo", user.TempoRitmo)
-            BoxText("Calorias Queimadas", user.CaloriasQueimadas)
+            BoxText("Tempo Ritmo", ritmoMedio)
+            BoxText("Calorias Queimadas", "${user.caloriasQueimadas} kcal")
         }
     }
 }
@@ -233,9 +170,7 @@ fun MetadadosPerfil(user: Usuario) {
 fun BoxText(metadata: String, data: String) {
     Box(modifier = Modifier
         .padding(10.dp)
-
-        .size(120.dp) // Cuidado: em telas muito estreitas, 120+120+paddings pode cortar.
-
+        .size(120.dp)
         .shadow(
             elevation = 5.dp,
             shape = RoundedCornerShape(10.dp)
@@ -244,7 +179,7 @@ fun BoxText(metadata: String, data: String) {
         .clip(RoundedCornerShape(10.dp))
     ) {
 
-        Column (modifier = Modifier.fillMaxSize().padding(4.dp), // Padding interno extra
+        Column (modifier = Modifier.fillMaxSize().padding(4.dp),
 
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center){
@@ -265,6 +200,12 @@ fun BoxText(metadata: String, data: String) {
         }
 
     }
+}
+
+fun formatarHoras(segundos: Long): String {
+    val horas = segundos / 3600
+    val minutos = (segundos % 3600) / 60
+    return "%dh %02dm".format(horas, minutos)
 }
 
 

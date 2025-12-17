@@ -45,7 +45,6 @@ class AuthViewModel : ViewModel() {
     }
 
     fun cadastrar(nome: String, email: String, senha: String, confirmarSenha: String) {
-        // Validações de Regra de Negócio ficam aqui!
         if (nome.isBlank() || email.isBlank() || senha.isBlank()) {
             _uiState.value = AuthUiState(error = "Preencha todos os campos")
             return
