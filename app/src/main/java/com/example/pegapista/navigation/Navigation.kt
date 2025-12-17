@@ -35,7 +35,7 @@ fun NavigationGraph(
     val destinoInicial = if (usuarioAtual != null) "Home" else "inicio"
     NavHost(
         navController = navController,
-        startDestination = "inicio",
+        startDestination = destinoInicial,
         modifier = modifier
     ) {
 
