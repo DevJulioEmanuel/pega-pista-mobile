@@ -158,11 +158,17 @@ fun AtividadeAfterScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = { /* Ação de Pausar */ },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                        onClick = { viewModel.toggleRastreamento() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isRastreando) Color(0xFFFF5252) else Color(0xFFFF9800)
+                        ),
                         shape = RoundedCornerShape(50)
                     ) {
-                            Text("Pausar", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = if (isRastreando) "Pausar" else "Retomar",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     Button(
