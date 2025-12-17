@@ -68,36 +68,17 @@ fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
 
     val scrollState = rememberScrollState()
 
-
-
-//    Column(
-//
-//        modifier = Modifier
-//
-//            .background(Color.White)
-//
-//            .fillMaxSize() // Garante que a tela base ocupe tudo
-//
-//            .verticalScroll(scrollState) // 2. Habilita a rolagem vertical
-//
-//    ) {
-
-
-
-
-
-
-
         Column(
-            modifier = modifier
+           modifier = Modifier
+               .verticalScroll(scrollState)
                 .padding(20.dp)
                 .clip(RoundedCornerShape(5.dp))
-              //  .fillMaxWidth()
+                .fillMaxWidth()
                 .fillMaxSize()
-                //.fillMaxHeight()
+                .fillMaxHeight()
                 .background(MaterialTheme.colorScheme.primary),
 
-           // verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Center,
 
             horizontalAlignment = Alignment.CenterHorizontally
 
@@ -113,7 +94,7 @@ fun PerfilScreen(modifier: Modifier = Modifier.background(Color.White)) {
 
 // Adicionei um Spacer no final para dar um respiro no fundo do cartão azul
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(50.dp))
 
         }
 
