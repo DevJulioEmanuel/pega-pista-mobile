@@ -1,8 +1,10 @@
 package com.example.pegapista.data.repository
 
+import android.util.Log
 import com.example.pegapista.data.models.Postagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class PostRepository {
@@ -21,10 +23,23 @@ class PostRepository {
                 .document(post.id)
                 .set(postSalvo)
                 .await()
-
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    suspend fun getFeedPosts(): List<Postagem> {
+        return try {
+            val snapshot = db.collection("posts")
+                .orderBy("data", Query.Direction.DESCENDING)
+                .limit(50)
+                .get()
+                .await()
+            snapshot.toObjects(Postagem::class.java)
+
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 
