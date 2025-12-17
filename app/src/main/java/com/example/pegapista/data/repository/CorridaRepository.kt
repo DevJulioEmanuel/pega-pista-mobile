@@ -27,6 +27,8 @@ class CorridaRepository {
         }
     }
 
+
+
     fun gerarIdCorrida(): String {
         return db.collection("corridas").document().id
     }
