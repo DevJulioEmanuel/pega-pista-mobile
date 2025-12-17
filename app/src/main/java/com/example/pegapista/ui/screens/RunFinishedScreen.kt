@@ -119,10 +119,8 @@ fun RunFinishedScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // --- BOTÃO DE COMPARTILHAR REFATORADO ---
         Button(
             onClick = {
-                // Chama o ViewModel passando tudo o que precisa
                 viewModel.compartilharCorrida(
                     titulo = titulo,
                     descricao = descricao,
