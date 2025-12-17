@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,7 +74,7 @@ fun RankingScreen(
                 Button(
                     onClick = { /* Ir para tela ranking */ },
 
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF033BCC)),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
 
                     shape = RoundedCornerShape(50)
                 ){
