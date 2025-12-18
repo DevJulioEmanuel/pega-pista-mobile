@@ -2,19 +2,12 @@ package com.example.pegapista.ui.screens
 
 import android.widget.Toast
 import android.util.Log
-import com.example.pegapista.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pegapista.R
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.AuthViewModel
@@ -48,7 +42,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(
-    modifier: Modifier = Modifier.background(MaterialTheme.colorScheme.primary),
+    modifier: Modifier = Modifier, // Removi o background default aqui para controlar melhor abaixo
     onVoltarClick: () -> Unit,
     onEntrarHome: () -> Unit,
     viewModel: AuthViewModel = viewModel()
@@ -123,6 +117,7 @@ fun Textsfields(
     val isPassword = placeholder == "Senha"
     val visualTransformation =
         if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -130,11 +125,10 @@ fun Textsfields(
             Text(
                 text = placeholder,
                 fontSize = 14.sp
-            )},
-        label = {
-            Text(
-                text = placeholder
             )
+        },
+        label = {
+            Text(text = placeholder)
         },
         visualTransformation = visualTransformation,
         shape = RoundedCornerShape(12.dp),
@@ -149,7 +143,8 @@ fun Textsfields(
         ),
         modifier = Modifier
             .height(60.dp)
-            .width(255.dp),
+            .fillMaxWidth() // 4. MUDANÇA: Ocupa a largura disponível no pai
+            .padding(horizontal = 10.dp) // Um pequeno respiro lateral
     )
 }
 
@@ -160,19 +155,19 @@ fun ButtonEntrar(
     Button(
         onClick = onClick,
         modifier = Modifier
-            .padding(horizontal = 30.dp)
+            .padding(horizontal = 30.dp) // Mantém o padding lateral do botão
             .shadow(
                 elevation = 8.dp,
                 shape = RoundedCornerShape(12.dp),
                 clip = false
             )
             .height(50.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth(), // Ocupa a largura disponível
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = BluePrimary
         )
-    )  {
+    ) {
         Text("Entrar", fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }
 }
