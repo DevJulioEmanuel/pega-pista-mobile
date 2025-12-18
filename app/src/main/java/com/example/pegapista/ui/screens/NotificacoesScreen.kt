@@ -95,20 +95,12 @@ fun NotificacoesScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(top = 40.dp, bottom = 20.dp, start = 20.dp, end = 20.dp),
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo
-        Image(
-            painter = painterResource(id = R.drawable.logo_aplicativo),
-            contentDescription = "Logo do aplicativo",
-            modifier = Modifier
-                .width(180.dp)
-                .height(80.dp),
-            contentScale = ContentScale.Fit
-        )
 
-        Spacer(modifier = Modifier.height(30.dp))
+
+  //      Spacer(modifier = Modifier.height(30.dp))
 
         // Container Principal
         Column(
