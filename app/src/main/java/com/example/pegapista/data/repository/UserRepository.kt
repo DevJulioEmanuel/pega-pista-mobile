@@ -30,4 +30,38 @@ class UserRepository {
             novoUsuario
         }
     }
+
+
+    //BUSCAR USUARIO, TELA DE BUSCA - JULIO EMANUEL
+
+    suspend fun buscarUsuarios(termo: String): List<Usuario> {
+        if (termo.isBlank()) return emptyList()
+
+        return try {
+            val snapshot = usersRef
+                .whereGreaterThanOrEqualTo("nickname", termo)
+                .whereLessThanOrEqualTo("nickname", termo + "\uf8ff")
+                .limit(20)
+                .get()
+                .await()
+
+            snapshot.toObjects(Usuario::class.java)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun getUsuariosSugestao(): List<Usuario> {
+        return try {
+            val snapshot = usersRef
+                .limit(10)
+                .get()
+                .await()
+
+            snapshot.toObjects(Usuario::class.java)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
 }
