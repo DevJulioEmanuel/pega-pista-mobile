@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.pegapista.ui.screens.AtividadeAfterScreen
 import com.example.pegapista.ui.screens.AtividadeBeforeScreen
+import com.example.pegapista.ui.screens.BuscarAmigosScreen
 import com.example.pegapista.ui.screens.CadastroScreen
 import com.example.pegapista.ui.screens.FeedScreen
 import com.example.pegapista.ui.screens.HomeScreen
@@ -117,14 +118,27 @@ fun NavigationGraph(
 
         composable("comunidade") {
             FeedScreen(
-                onRankingScreen = { navController.navigate("Ranking") }
+                onRankingScreen = {
+                    navController.navigate("Ranking")
+                },
+                onBuscarAmigosScreen = {
+                    navController.navigate("BuscarAmigos")
+                }
             )
         }
 
         composable("Ranking") {
             RankingScreen(
+                onFeedScreen = { navController.popBackStack() },
+                onBuscarAmigosScreen = {
+                    navController.navigate("BuscarAmigos")
+                }
+            )
+        }
 
-                onFeedScreen = { navController.popBackStack() }
+        composable("BuscarAmigos") {
+            BuscarAmigosScreen(
+
             )
         }
 
