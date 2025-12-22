@@ -9,13 +9,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.pegapista.ui.screens.AtividadeAfterScreen
 import com.example.pegapista.ui.screens.AtividadeBeforeScreen
+import com.example.pegapista.ui.screens.BuscarAmigosScreen
 import com.example.pegapista.ui.screens.CadastroScreen
+import com.example.pegapista.ui.screens.ComentariosScreen
 import com.example.pegapista.ui.screens.FeedScreen
 import com.example.pegapista.ui.screens.HomeScreen
 import com.example.pegapista.ui.screens.InicioScreen
 import com.example.pegapista.ui.screens.LoginScreen
 import com.example.pegapista.ui.screens.NotificacoesScreen
 import com.example.pegapista.ui.screens.PerfilScreen
+import com.example.pegapista.ui.screens.PerfilUsuarioScreen
 import com.example.pegapista.ui.screens.RankingScreen
 import com.example.pegapista.ui.screens.RunFinishedScreen
 import com.google.firebase.auth.FirebaseAuth
@@ -117,15 +120,50 @@ fun NavigationGraph(
 
         composable("comunidade") {
             FeedScreen(
-                onRankingScreen = { navController.navigate("Ranking") }
+                onRankingScreen = {
+                    navController.navigate("Ranking")
+                },
+                onBuscarAmigosScreen = {
+                    navController.navigate("BuscarAmigos")
+                },
+                onCommentClick = { post ->
+                    navController.navigate("comentarios/${post.id}")
+                }
+            )
+        }
+
+        composable(
+            route = "comentarios/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+
+            ComentariosScreen(
+                postId = postId,
+                onVoltar = { navController.popBackStack() }
             )
         }
 
         composable("Ranking") {
             RankingScreen(
-
-                onFeedScreen = { navController.popBackStack() }
+                onFeedScreen = { navController.popBackStack() },
+                onBuscarAmigosScreen = {
+                    navController.navigate("BuscarAmigos")
+                }
             )
+        }
+
+        composable("BuscarAmigos") {
+            BuscarAmigosScreen(
+                onPerfilUsuarioScreen = { idUsuario ->
+                    navController.navigate("PerfilUsuario/$idUsuario")
+                }
+            )
+        }
+
+        composable(route="PerfilUsuario/{idUsuario}") {  backStackEntry ->
+            val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
+            PerfilUsuarioScreen(idUsuario = idUsuario)
         }
 
 
