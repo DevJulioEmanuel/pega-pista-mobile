@@ -9,5 +9,7 @@ data class Usuario(
     val tempoTotalSegundos: Long = 0,
     val caloriasQueimadas: Int = 0,
     val diasSeguidos: Int = 0,
-    val recordeDiasSeguidos: Int = 0
+    val recordeDiasSeguidos: Int = 0,
+    val seguidores: Int = 0,
+    val seguindo: Int = 0
 )

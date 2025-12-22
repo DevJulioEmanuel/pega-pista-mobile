@@ -46,4 +46,20 @@ class PostRepository {
     fun gerarIdPost(): String {
         return db.collection("posts").document().id
     }
+
+    suspend fun getPostsPorUsuario(userId: String): List<Postagem> {
+        return try {
+            Log.d("DEBUG_PERFIL", "🔍 Buscando posts para o ID: $userId")
+            val snapshot = db.collection("posts")
+                .whereEqualTo("userId", userId)
+                .orderBy("data", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .await()
+            Log.d("DEBUG_PERFIL", "✅ Sucesso! Encontrou ${snapshot.size()} posts")
+            snapshot.toObjects(Postagem::class.java)
+        } catch (e: Exception) {
+            Log.e("DEBUG_PERFIL", "❌ ERRO CRÍTICO: ${e.message}")
+            emptyList()
+        }
+    }
 }

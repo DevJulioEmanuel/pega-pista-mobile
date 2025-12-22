@@ -54,6 +54,7 @@ import com.example.pegapista.ui.viewmodels.BuscaViewModel
 fun BuscarAmigosScreen(
     modifier: Modifier = Modifier.background(Color.White),
     viewModel: BuscaViewModel = viewModel(),
+    onPerfilUsuarioScreen: (idUsuario: String) -> Unit
 ) {
     val textoBusca by viewModel.textoBusca.collectAsState()
     val usuariosEncontrados by viewModel.resultados.collectAsState()
@@ -103,7 +104,6 @@ fun BuscarAmigosScreen(
             color = Color.Gray,
             modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
         )
-        
         if (isLoading) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -123,7 +123,7 @@ fun BuscarAmigosScreen(
                 }
 
                 items(usuariosEncontrados) { usuario ->
-                    CardUsuario(usuario)
+                    CardUsuario(usuario, onPerfilUsuarioScreen)
                 }
             }
         }
@@ -131,9 +131,10 @@ fun BuscarAmigosScreen(
 }
 
 @Composable
-fun CardUsuario(usuario: Usuario) {
+fun CardUsuario(usuario: Usuario, onPerfilUsuarioScreen: (String) -> Unit) {
     Card (
-        modifier = Modifier
+        modifier = Modifier,
+        onClick = { onPerfilUsuarioScreen(usuario.id) }
     ) {
         Row (
             modifier = Modifier.fillMaxWidth().background(Color.White)
@@ -162,6 +163,6 @@ fun CardUsuario(usuario: Usuario) {
 @Composable
 fun BuscarAmigosScreenPreview() {
     PegaPistaTheme {
-        BuscarAmigosScreen()
+        BuscarAmigosScreen(onPerfilUsuarioScreen = {})
     }
 }
