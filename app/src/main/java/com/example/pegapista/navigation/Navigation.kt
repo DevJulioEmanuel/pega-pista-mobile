@@ -11,6 +11,7 @@ import com.example.pegapista.ui.screens.AtividadeAfterScreen
 import com.example.pegapista.ui.screens.AtividadeBeforeScreen
 import com.example.pegapista.ui.screens.BuscarAmigosScreen
 import com.example.pegapista.ui.screens.CadastroScreen
+import com.example.pegapista.ui.screens.ComentariosScreen
 import com.example.pegapista.ui.screens.FeedScreen
 import com.example.pegapista.ui.screens.HomeScreen
 import com.example.pegapista.ui.screens.InicioScreen
@@ -124,7 +125,22 @@ fun NavigationGraph(
                 },
                 onBuscarAmigosScreen = {
                     navController.navigate("BuscarAmigos")
+                },
+                onCommentClick = { post ->
+                    navController.navigate("comentarios/${post.id}")
                 }
+            )
+        }
+
+        composable(
+            route = "comentarios/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+
+            ComentariosScreen(
+                postId = postId,
+                onVoltar = { navController.popBackStack() }
             )
         }
 

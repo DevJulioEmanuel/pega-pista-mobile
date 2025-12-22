@@ -138,4 +138,18 @@ class UserRepository {
         }
     }
 
+    suspend fun getIdsSeguindo(): List<String> {
+        val meuId = auth.currentUser?.uid ?: return emptyList()
+
+        return try {
+            val snapshot = db.collection("usuarios").document(meuId)
+                .collection("seguindo")
+                .get()
+                .await()
+            snapshot.documents.map { it.id }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
 }

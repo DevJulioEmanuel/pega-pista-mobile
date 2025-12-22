@@ -7,5 +7,7 @@ data class Postagem(
     val titulo: String = "",
     val descricao: String = "",
     val corrida: Corrida = Corrida(),
-    val data: Long = System.currentTimeMillis()
+    val data: Long = System.currentTimeMillis(),
+    val curtidas: List<String> = emptyList(),
+    val qtdComentarios: Int = 0
 )

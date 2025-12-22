@@ -54,17 +54,21 @@ import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
+import com.example.pegapista.ui.viewmodels.PostViewModel
 
 @Composable
 fun PerfilUsuarioScreen(
     modifier: Modifier = Modifier.background(Color.White),
     viewModel: PerfilUsuarioViewModel = viewModel(),
+    postsviewModel: PostViewModel = viewModel(),
     idUsuario: String = ""
 ) {
     val usuario by viewModel.userState.collectAsState()
+    val postagens by postsviewModel.feedState.collectAsState()
     val scrollState = rememberScrollState()
     val isSeguindo by viewModel.isSeguindo.collectAsState()
     val posts by viewModel.postsUsuario.collectAsState()
+
 
     LaunchedEffect(Unit) {
         viewModel.carregarPerfilUsuario(idUsuario)
@@ -104,7 +108,9 @@ fun PerfilUsuarioScreen(
             }
         }
         item {
+            Spacer(Modifier.height(20.dp))
             if (posts.isNotEmpty()) {
+                Spacer(Modifier.height(20.dp))
                 Text(
                     text = "Atividades Recentes",
                     color = Color.White,
@@ -123,7 +129,16 @@ fun PerfilUsuarioScreen(
 
         items(posts) { post ->
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                PostCard(post = post)
+                PostCard(
+                    post = post,
+                    currentUserId = "",
+                    onLikeClick = {
+                        postsviewModel.toggleCurtidaPost(post)
+                    },
+                    onCommentClick = {
+
+                    }
+                    )
             }
         }
 

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ModeComment
 import androidx.compose.material.icons.outlined.ModeComment
@@ -52,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
+import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.ui.viewmodels.PostViewModel
 
 
@@ -60,14 +63,15 @@ fun FeedScreen(
     modifier: Modifier = Modifier.background(Color.White),
     onRankingScreen: () -> Unit,
     onBuscarAmigosScreen: () -> Unit,
+    onCommentClick: (Postagem) -> Unit,
     viewModel: PostViewModel = viewModel()
 ) {
     val postagens by viewModel.feedState.collectAsState()
-
+    val meuId = viewModel.meuId
+    val qtdComentarios = viewModel.comentariosState.collectAsState().value.size
     LaunchedEffect(Unit) {
         viewModel.carregarFeed()
     }
-
 
     Column(
         modifier = Modifier.background(Color.White)
@@ -146,18 +150,33 @@ fun FeedScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(postagens) { post ->
-                        PostCard(post)
+                        PostCard(
+                            post = post,
+                            currentUserId = meuId,
+                            onLikeClick = {
+                                viewModel.toggleCurtidaPost(post)
+                            },
+                            onCommentClick = {
+                                onCommentClick(post)
+                            },
+                        )
                     }
                 }
             }
-
-
         }
     }
 }
 
 @Composable
-fun PostCard(post: Postagem) {
+fun PostCard(
+    post: Postagem,
+    onLikeClick: () -> Unit,
+    onCommentClick: (Postagem) -> Unit,
+    currentUserId: String,
+) {
+    val euCurti = post.curtidas.contains(currentUserId)
+    val qtdCurtidas = post.curtidas.size
+    val qtdComentarios = post.qtdComentarios
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -221,22 +240,37 @@ fun PostCard(post: Postagem) {
 
             )
             Spacer(Modifier.height(8.dp))
-            Row() {
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Filled.FavoriteBorder,
-                        contentDescription = "Like",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+            Row(
 
+            ) {
+                IconButton(onClick = onLikeClick) {
+                    Icon(
+                        imageVector = if (euCurti) {
+                            Icons.Filled.Favorite
+                        } else {
+                            Icons.Filled.FavoriteBorder
+                        },
+                        contentDescription = "Like",
+                        tint = Color.DarkGray
+                    )
                 }
-                IconButton(onClick = {}) {
+                Text(
+                    text = "$qtdCurtidas",
+                    color = Color.DarkGray,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                IconButton( onClick = { onCommentClick(post) } ) {
                     Icon(
                         imageVector = Icons.Outlined.ModeComment,
                         contentDescription = "Commentary",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = Color.DarkGray
                     )
                 }
+                Text(
+                    text = "$qtdComentarios",
+                    color = Color.DarkGray,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
             }
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 0.dp),
@@ -269,6 +303,6 @@ fun metadadosCorrida(dado: String, metadado: String) {
 @Composable
 fun FeedScreenPreview() {
     PegaPistaTheme {
-        FeedScreen(onRankingScreen = {}, onBuscarAmigosScreen = {})
+        FeedScreen(onRankingScreen = {}, onBuscarAmigosScreen = {}, onCommentClick = {})
     }
 }

@@ -2,6 +2,7 @@ package com.example.pegapista.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.repository.PostRepository
@@ -24,11 +25,19 @@ class PostViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PostUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val auth = FirebaseAuth.getInstance()
 
-    //FEED -Julio
+    // ESTADO - FEED
     private val _feedState = MutableStateFlow<List<Postagem>>(emptyList())
     val feedState = _feedState.asStateFlow()
+
+    // ESTADO - COMENTARIOS
+    private val _comentariosState = MutableStateFlow<List<Comentario>>(emptyList())
+    val comentariosState = _comentariosState.asStateFlow()
+
+    // ESTADO - ID
+    private val auth = FirebaseAuth.getInstance()
+    val meuId: String
+        get() = auth.currentUser?.uid ?: ""
 
     init {
         carregarFeed()
@@ -36,8 +45,24 @@ class PostViewModel : ViewModel() {
 
     fun carregarFeed() {
         viewModelScope.launch {
-            val posts = repository.getFeedPosts()
-            _feedState.value = posts
+            val meuId = auth.currentUser?.uid
+
+            if (meuId == null) {
+                _feedState.value = emptyList()
+                return@launch
+            }
+            val idsAmigos = userRepository.getIdsSeguindo()
+            val listaAmigos = idsAmigos.toMutableList()
+            listaAmigos.add(meuId)
+
+            val listaAmigosComLimite = listaAmigos.take(10)
+
+            if (listaAmigosComLimite.isNotEmpty()) {
+                val posts = repository.getFeedPosts(listaAmigosComLimite)
+                _feedState.value = posts
+            } else {
+                _feedState.value = emptyList()
+            }
         }
     }
 
@@ -80,6 +105,55 @@ class PostViewModel : ViewModel() {
                     _uiState.value = PostUiState(error = e.message ?: "Erro ao publicar")
                 }
             }
+        }
+    }
+
+    // CURTIDAS E COMENTARIOS - JULIO EMANUEL
+
+    fun toggleCurtidaPost(post: Postagem) {
+        viewModelScope.launch {
+            val meuId = auth.currentUser?.uid ?: return@launch
+            val jaCurtiu = post.curtidas.contains(meuId)
+
+            val sucesso = repository.toggleCurtida(post.id, meuId, jaCurtiu)
+
+            if (sucesso) {
+                val novaListaFeed = _feedState.value.map { p ->
+                    if (p.id == post.id) {
+                        val novasCurtidas = p.curtidas.toMutableList()
+                        if (jaCurtiu) novasCurtidas.remove(meuId) else novasCurtidas.add(meuId)
+                        p.copy(curtidas = novasCurtidas)
+                    } else {
+                        p
+                    }
+                }
+                _feedState.value = novaListaFeed
+            }
+        }
+    }
+
+    fun enviarComentario(postId: String, texto: String) {
+        if (texto.isBlank()) return
+
+        viewModelScope.launch {
+            val usuario = userRepository.getUsuarioAtual()
+            val novoComentario = Comentario(
+                userId = usuario.id,
+                nomeUsuario = usuario.nickname,
+                texto = texto,
+                data = System.currentTimeMillis()
+            )
+            val sucesso = repository.enviarComentario(postId, novoComentario)
+            if (sucesso) {
+                carregarComentarios(postId)
+            }
+        }
+    }
+
+    fun carregarComentarios(postId: String) {
+        viewModelScope.launch {
+            val lista = repository.getComentarios(postId)
+            _comentariosState.value = lista
         }
     }
 }
