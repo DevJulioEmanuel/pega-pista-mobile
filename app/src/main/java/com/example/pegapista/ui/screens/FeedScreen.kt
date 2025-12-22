@@ -95,7 +95,7 @@ fun FeedScreen(
                 }
                 Button(
                     onClick = onRankingScreen,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFFFFF)),
                     border = BorderStroke(2.dp, Color.Blue),
                     shape = RoundedCornerShape(50)
                 ){
