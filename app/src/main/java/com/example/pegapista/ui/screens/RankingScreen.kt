@@ -39,7 +39,8 @@ import com.example.pegapista.R
 @Composable
 fun RankingScreen(
     modifier: Modifier = Modifier.background(Color.White),
-    onFeedScreen: () -> Unit
+    onFeedScreen: () -> Unit,
+    onBuscarAmigosScreen: () -> Unit
 ){
     var posição = 1
     val scrollState = rememberScrollState()

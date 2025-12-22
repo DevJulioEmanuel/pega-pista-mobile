@@ -9,6 +9,7 @@ import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.repository.PostRepository
 import com.example.pegapista.data.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
