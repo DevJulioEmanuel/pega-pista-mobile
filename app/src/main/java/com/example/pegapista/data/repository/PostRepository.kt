@@ -1,8 +1,10 @@
 package com.example.pegapista.data.repository
 
 import android.util.Log
+import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Postagem
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -29,16 +31,19 @@ class PostRepository {
         }
     }
 
-    suspend fun getFeedPosts(): List<Postagem> {
+    suspend fun getFeedPosts(listaIds: List<String>): List<Postagem> {
+        if (listaIds.isEmpty()) return emptyList()
         return try {
             val snapshot = db.collection("posts")
-                .orderBy("data", Query.Direction.DESCENDING)
-                .limit(50)
+                .whereIn("userId", listaIds)
+                .orderBy("data", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
+
             snapshot.toObjects(Postagem::class.java)
 
         } catch (e: Exception) {
+            android.util.Log.e("FEED_ERRO", "Erro: ${e.message}")
             emptyList()
         }
     }
@@ -49,16 +54,63 @@ class PostRepository {
 
     suspend fun getPostsPorUsuario(userId: String): List<Postagem> {
         return try {
-            Log.d("DEBUG_PERFIL", "🔍 Buscando posts para o ID: $userId")
             val snapshot = db.collection("posts")
                 .whereEqualTo("userId", userId)
                 .orderBy("data", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
-            Log.d("DEBUG_PERFIL", "✅ Sucesso! Encontrou ${snapshot.size()} posts")
             snapshot.toObjects(Postagem::class.java)
         } catch (e: Exception) {
-            Log.e("DEBUG_PERFIL", "❌ ERRO CRÍTICO: ${e.message}")
+            emptyList()
+        }
+    }
+
+    // CURTIDA E COMENTARIOS - JULIO EMANUEL
+
+    suspend fun toggleCurtida(postId: String, userId: String, jaCurtiu: Boolean): Boolean {
+        return try {
+            val postRef = db.collection("posts").document(postId)
+
+            if (jaCurtiu) {
+                postRef.update("curtidas", FieldValue.arrayRemove(userId)).await()
+            } else {
+                postRef.update("curtidas", FieldValue.arrayUnion(userId)).await()
+            }
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun enviarComentario(postId: String, comentario: Comentario): Boolean {
+        return try {
+            val batch = db.batch()
+
+            val novoComentarioRef = db.collection("posts").document(postId)
+                .collection("comentarios").document()
+
+            batch.set(novoComentarioRef, comentario)
+
+            val postRef = db.collection("posts").document(postId)
+            batch.update(postRef, "qtdComentarios", FieldValue.increment(1))
+
+            batch.commit().await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun getComentarios(postId: String): List<Comentario> {
+        return try {
+            val snapshot = db.collection("posts").document(postId)
+                .collection("comentarios")
+                .orderBy("data")
+                .get()
+                .await()
+            snapshot.toObjects(Comentario::class.java)
+        } catch (e: Exception) {
             emptyList()
         }
     }
