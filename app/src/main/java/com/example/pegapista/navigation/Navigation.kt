@@ -17,6 +17,7 @@ import com.example.pegapista.ui.screens.InicioScreen
 import com.example.pegapista.ui.screens.LoginScreen
 import com.example.pegapista.ui.screens.NotificacoesScreen
 import com.example.pegapista.ui.screens.PerfilScreen
+import com.example.pegapista.ui.screens.PerfilUsuarioScreen
 import com.example.pegapista.ui.screens.RankingScreen
 import com.example.pegapista.ui.screens.RunFinishedScreen
 import com.google.firebase.auth.FirebaseAuth
@@ -138,8 +139,15 @@ fun NavigationGraph(
 
         composable("BuscarAmigos") {
             BuscarAmigosScreen(
-
+                onPerfilUsuarioScreen = { idUsuario ->
+                    navController.navigate("PerfilUsuario/$idUsuario")
+                }
             )
+        }
+
+        composable(route="PerfilUsuario/{idUsuario}") {  backStackEntry ->
+            val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
+            PerfilUsuarioScreen(idUsuario = idUsuario)
         }
 
 

@@ -1,5 +1,4 @@
 package com.example.pegapista.ui.screens
-
 import androidx.compose.foundation.Image
 
 import androidx.compose.foundation.background
@@ -18,6 +17,8 @@ import androidx.compose.foundation.layout.size
 
 
 import androidx.compose.foundation.layout.* // Importa tudo de layout
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 import androidx.compose.foundation.rememberScrollState
 
@@ -26,6 +27,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,40 +53,94 @@ import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
-import com.example.pegapista.ui.viewmodels.PerfilViewModel
+import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
 
 @Composable
-fun PerfilScreen(
+fun PerfilUsuarioScreen(
     modifier: Modifier = Modifier.background(Color.White),
-    viewModel: PerfilViewModel = viewModel()
+    viewModel: PerfilUsuarioViewModel = viewModel(),
+    idUsuario: String = ""
 ) {
     val usuario by viewModel.userState.collectAsState()
     val scrollState = rememberScrollState()
-    LaunchedEffect(Unit) {
-        viewModel.carregarPerfil()
-    }
-    Column(
-        modifier = modifier
-            .padding(20.dp)
-            .clip(RoundedCornerShape(5.dp))
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
+    val isSeguindo by viewModel.isSeguindo.collectAsState()
+    val posts by viewModel.postsUsuario.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.carregarPerfilUsuario(idUsuario)
+    }
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(35.dp))
-        TopPerfil(usuario)
-        Spacer(modifier = Modifier.height(5.dp))
-        MetadadosPerfil(usuario)
+        item {
+            Spacer(modifier = Modifier.height(35.dp))
+            TopUsuarioPerfil(usuario)
+        }
+        item {
+            Spacer(modifier = Modifier.height(5.dp))
+            MetadadosUsuarioPerfil(usuario)
+        }
+        item {
+            Spacer(Modifier.height(30.dp))
+            Button(
+                onClick = { viewModel.toggleSeguir() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSeguindo) Color.White else Color(0xFF0FDC52),
+                    contentColor = if (isSeguindo) MaterialTheme.colorScheme.primary else Color.White
+                ),
+                shape = RoundedCornerShape(50),
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(50.dp)
+            ) {
+                Text(
+                    text = if (isSeguindo) "Seguindo ✓" else "Seguir",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+        }
+        item {
+            if (posts.isNotEmpty()) {
+                Text(
+                    text = "Atividades Recentes",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+            } else {
+                Text(
+                    text = "Nenhuma atividade ainda.",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        items(posts) { post ->
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                PostCard(post = post)
+            }
+        }
+
+        item {
+            Spacer(Modifier.height(50.dp))
+        }
+    }
+
+
+
+
         Spacer(Modifier.height(20.dp))
     }
-}
+
 
 @Composable
-
-fun TopPerfil(user: Usuario) {
-
+fun TopUsuarioPerfil(user: Usuario) {
     Column (
         modifier = Modifier
             .padding(top = 15.dp),
@@ -109,9 +166,9 @@ fun TopPerfil(user: Usuario) {
 }
 
 @Composable
-fun MetadadosPerfil(user: Usuario) {
+fun MetadadosUsuarioPerfil(user: Usuario) {
     val distFormatada = "%.1f km".format(user.distanciaTotalKm)
-    val tempoFormatado = formatarHoras(user.tempoTotalSegundos)
+    val tempoFormatado = formatarUsuarioHoras(user.tempoTotalSegundos)
     val ritmoMedio = if (user.distanciaTotalKm > 0) {
         val minutosTotais = user.tempoTotalSegundos / 60.0
         val pace = minutosTotais / user.distanciaTotalKm
@@ -182,7 +239,7 @@ fun MetadadosPerfil(user: Usuario) {
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(35.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -196,14 +253,14 @@ fun MetadadosPerfil(user: Usuario) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            BoxText("Tempo Ritmo", ritmoMedio)
-            BoxText("Calorias Queimadas", "${user.caloriasQueimadas} kcal")
+            BoxUsuarioText("Tempo Ritmo", ritmoMedio)
+            BoxUsuarioText("Calorias Queimadas", "${user.caloriasQueimadas} kcal")
         }
     }
 }
 
 @Composable
-fun BoxText(metadata: String, data: String) {
+fun BoxUsuarioText(metadata: String, data: String) {
     Box(modifier = Modifier
         .padding(10.dp)
         .size(120.dp)
@@ -238,7 +295,11 @@ fun BoxText(metadata: String, data: String) {
     }
 }
 
-fun formatarHoras(segundos: Long): String {
+fun BotaoSeguir() {
+
+}
+
+fun formatarUsuarioHoras(segundos: Long): String {
     val horas = segundos / 3600
     val minutos = (segundos % 3600) / 60
     return "%dh %02dm".format(horas, minutos)
@@ -247,7 +308,7 @@ fun formatarHoras(segundos: Long): String {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PerfilScreenPreview() {
+fun PerfilUsuarioScreenPreview() {
     PegaPistaTheme {
         PerfilScreen()
     }
