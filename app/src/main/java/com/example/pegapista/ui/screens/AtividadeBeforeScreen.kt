@@ -1,5 +1,10 @@
 package com.example.pegapista.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,20 +20,57 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.pegapista.R
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.example.pegapista.utils.showNotification
 
 @Composable
 fun AtividadeBeforeScreen(
     modifier: Modifier = Modifier,
     onStartActivity: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
+    // Configura o Launcher para pedir permissão (Android 13+)
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Se o usuário permitiu, envia a notificação e inicia
+            showNotification(context, "Atividade Iniciada!", "Bom treino, continue firme!")
+            onStartActivity()
+        } else {
+            // Se negou, inicia sem notificação
+            onStartActivity()
+        }
+    }
+
+    // Função interna para validar e disparar
+    val handleStartClick = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (hasPermission) {
+                showNotification(context, "Atividade Iniciada!", "Bom treino, continue firme!")
+                onStartActivity()
+            } else {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            showNotification(context, "Atividade Iniciada!", "Bom treino, continue firme!")
+            onStartActivity()
+        }
+    }
     //Coluna Principal
     Column(
         modifier = modifier
@@ -59,7 +101,7 @@ fun AtividadeBeforeScreen(
             CardIlustracaoAtividade()
 
             // Botão de Ação
-            ButtonIniciarAtividade(onClick = onStartActivity)
+            ButtonIniciarAtividade(onClick = { handleStartClick() })
         }
     }
 }
