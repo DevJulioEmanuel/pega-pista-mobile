@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
-// Estado da UI
 data class PostUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
@@ -29,7 +28,6 @@ class PostViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PostUiState())
     val uiState = _uiState.asStateFlow()
 
-    // --- ESTADO DA FOTO LOCAL (Necessário para a tela funcionar) ---
     private val _fotoSelecionadaUri = MutableStateFlow<Uri?>(null)
     val fotoSelecionadaUri = _fotoSelecionadaUri.asStateFlow()
 
@@ -48,7 +46,6 @@ class PostViewModel : ViewModel() {
         }
     }
 
-    // --- FUNÇÃO QUE A TELA DE CORRIDA ESTÁ PROCURANDO ---
     fun selecionarFotoLocal(uri: Uri) {
         _fotoSelecionadaUri.value = uri
     }
@@ -68,7 +65,6 @@ class PostViewModel : ViewModel() {
                 val nomeAutor = usuarioAtual.nickname
                 val fotoUri = _fotoSelecionadaUri.value
 
-                // 1. Upload da foto (se houver)
                 var urlFotoFinal: String? = null
 
                 if (fotoUri != null) {
@@ -84,7 +80,6 @@ class PostViewModel : ViewModel() {
                     }
                 }
 
-                // 2. Cria objeto Postagem
                 val corridaDados = Corrida(
                     distanciaKm = distancia,
                     tempo = tempo,
@@ -98,7 +93,7 @@ class PostViewModel : ViewModel() {
                     titulo = titulo,
                     descricao = descricao,
                     corrida = corridaDados,
-                    fotoUrl = urlFotoFinal // Certifique-se de ter adicionado este campo no Postagem.kt
+                    fotoUrl = urlFotoFinal
                 )
 
                 val resultado = repository.criarPost(novaPostagem)
