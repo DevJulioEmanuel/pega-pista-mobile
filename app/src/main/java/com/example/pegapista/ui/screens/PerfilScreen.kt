@@ -65,7 +65,7 @@ fun PerfilScreen(
 
     ) {
         Spacer(modifier = Modifier.height(35.dp))
-        TopPerfil(usuario)
+        TopPerfil(usuario, viewModel)
         Spacer(modifier = Modifier.height(5.dp))
         MetadadosPerfil(usuario)
         Spacer(Modifier.height(20.dp))
