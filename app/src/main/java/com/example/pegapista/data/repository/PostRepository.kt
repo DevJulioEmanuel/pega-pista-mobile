@@ -23,6 +23,7 @@ class PostRepository {
                 .document(post.id)
                 .set(postSalvo)
                 .await()
+            UserRepository().atualizarSequenciaDiaria()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
