@@ -104,17 +104,10 @@ fun AtividadeAfterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        Image(
-            painter = painterResource(R.drawable.logo_aplicativo),
-            contentDescription = "Logo do aplicativo",
-            modifier = Modifier
-                .size(150.dp)
-                .padding(bottom = 16.dp)
-        )
 
 
         Card(
