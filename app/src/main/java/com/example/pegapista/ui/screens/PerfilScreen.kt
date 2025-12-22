@@ -65,7 +65,6 @@ fun PerfilScreen(
     ) {
         Spacer(modifier = Modifier.height(35.dp))
 
-        // Passamos o viewModel para o TopPerfil poder chamar a atualização
         TopPerfil(usuario, viewModel)
 
         Spacer(modifier = Modifier.height(5.dp))
@@ -83,16 +82,13 @@ fun TopPerfil(
     var mostrarOpcoes by remember { mutableStateOf(false) }
     var uriTemporaria by remember { mutableStateOf<Uri?>(null) }
 
-    // --- LAUNCHERS (Gerenciadores de Resultado de Activity) ---
 
-    // 1. Launcher da Galeria
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) viewModel.atualizarFotoPerfil(uri)
     }
 
-    // 2. Launcher da Câmera
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { sucesso ->
@@ -101,7 +97,6 @@ fun TopPerfil(
         }
     }
 
-    // 3. Permissão de Câmera
     val permissaoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { aceitou ->
@@ -113,13 +108,11 @@ fun TopPerfil(
         }
     }
 
-    // --- UI DO TOPO ---
     Column(
         modifier = Modifier.padding(top = 15.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(contentAlignment = Alignment.BottomEnd) {
-            // A FOTO (Lógica para mostrar URL ou Jacó)
             val foto = user.fotoPerfilUrl
             if (!foto.isNullOrEmpty()) {
                 AsyncImage(
@@ -145,7 +138,7 @@ fun TopPerfil(
                 )
             }
 
-            // O BOTÃO DE CÂMERA (Clicável)
+
             Box(
                 modifier = Modifier
                     .offset(x = 5.dp, y = 5.dp)
@@ -174,7 +167,6 @@ fun TopPerfil(
         )
     }
 
-    // --- DIÁLOGO DE ESCOLHA (Pop-up) ---
     if (mostrarOpcoes) {
         AlertDialog(
             onDismissRequest = { mostrarOpcoes = false },
@@ -183,7 +175,6 @@ fun TopPerfil(
             confirmButton = {
                 TextButton(onClick = {
                     mostrarOpcoes = false
-                    // Abre Galeria (apenas imagens)
                     galeriaLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
@@ -194,7 +185,6 @@ fun TopPerfil(
             dismissButton = {
                 TextButton(onClick = {
                     mostrarOpcoes = false
-                    // Pede permissão -> Cria Uri -> Abre Câmera
                     permissaoLauncher.launch(Manifest.permission.CAMERA)
                 }) {
                     Text("Câmera")
@@ -242,7 +232,7 @@ fun MetadadosPerfil(user: Usuario) {
                 fontWeight = FontWeight.W500,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp) // Adicionei padding interno para o texto não colar
+                    .padding(10.dp)
             )
         }
         Spacer(Modifier.height(35.dp))
@@ -255,7 +245,7 @@ fun MetadadosPerfil(user: Usuario) {
             BoxText("Tempo Total", tempoFormatado)
         }
 
-        Spacer(modifier = Modifier.height(10.dp)) // Espaçamento entre as linhas
+        Spacer(modifier = Modifier.height(10.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -312,8 +302,7 @@ fun formatarHoras(segundos: Long): String {
     return "%dh %02dm".format(horas, minutos)
 }
 
-// --- FUNÇÃO AUXILIAR PARA CRIAR O ARQUIVO TEMPORÁRIO ---
-// (Necessário para a câmera salvar a foto em alta qualidade)
+
 private fun criarUriParaFoto(context: Context): Uri {
     val arquivo = File.createTempFile(
         "foto_perfil_",
@@ -323,8 +312,6 @@ private fun criarUriParaFoto(context: Context): Uri {
         createNewFile()
         deleteOnExit()
     }
-
-    // O authority deve ser o mesmo definido no AndroidManifest (applicationId + .provider)
     return FileProvider.getUriForFile(
         context,
         "${context.packageName}.provider",
