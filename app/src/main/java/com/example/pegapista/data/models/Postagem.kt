@@ -7,5 +7,6 @@ data class Postagem(
     val titulo: String = "",
     val descricao: String = "",
     val corrida: Corrida = Corrida(),
-    val data: Long = System.currentTimeMillis()
+    val data: Long = System.currentTimeMillis(),
+    val fotoUrl: String? = null
 )

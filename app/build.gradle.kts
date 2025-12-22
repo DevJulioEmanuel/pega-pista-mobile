@@ -47,9 +47,8 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:6.2.1")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
-    // Nota: Tinhas "libs.play.services.maps" repetido em baixo, removi para limpar.
-
-    // --- Android Core & Compose ---
+    implementation("com.google.firebase:firebase-storage")
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
