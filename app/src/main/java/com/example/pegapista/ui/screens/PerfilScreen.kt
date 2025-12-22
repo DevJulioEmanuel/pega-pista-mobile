@@ -62,11 +62,10 @@ fun PerfilScreen(
             .clip(RoundedCornerShape(5.dp))
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
+
     ) {
         Spacer(modifier = Modifier.height(35.dp))
-
-        TopPerfil(usuario, viewModel)
-
+        TopPerfil(usuario)
         Spacer(modifier = Modifier.height(5.dp))
         MetadadosPerfil(usuario)
         Spacer(Modifier.height(20.dp))
@@ -204,10 +203,46 @@ fun MetadadosPerfil(user: Usuario) {
         "%.2f min/km".format(pace)
     } else "0:00 min/km"
 
-    Column(
+    Column (
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(Modifier.height(15.dp))
+        Row (
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ){
+            Column {
+                Text(
+                    text = "Seguidores",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White
+                )
+                Text(
+                    text = "${user.seguidores}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
+                )
+            }
+            Spacer(Modifier.width(40.dp))
+            Column {
+                Text(
+                    text = "Seguindo",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White
+                )
+                Text(
+                    text = "${user.seguindo}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
+                )
+            }
+        }
+        Spacer(Modifier.height(10.dp))
         Text(
             text = "${user.diasSeguidos} dias!",
             fontSize = 20.sp,
@@ -225,6 +260,17 @@ fun MetadadosPerfil(user: Usuario) {
                 )
                 .background(Color.White)
                 .clip(RoundedCornerShape(10.dp))
+        )
+        Spacer(Modifier.height(10.dp))
+        Box(modifier = Modifier
+            .padding(horizontal = 35.dp)
+            .fillMaxWidth()
+            .shadow(
+                elevation = 5.dp,
+                shape = RoundedCornerShape(10.dp)
+            )
+            .background(Color.White)
+            .clip(RoundedCornerShape(10.dp))
         ) {
             Text(
                 text = "Seu recorde foi de ${user.recordeDiasSeguidos} dias seguidos!",
@@ -236,7 +282,6 @@ fun MetadadosPerfil(user: Usuario) {
             )
         }
         Spacer(Modifier.height(35.dp))
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -244,19 +289,16 @@ fun MetadadosPerfil(user: Usuario) {
             BoxText("Distância Total", distFormatada)
             BoxText("Tempo Total", tempoFormatado)
         }
-
         Spacer(modifier = Modifier.height(10.dp))
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            BoxText("Ritmo Médio", ritmoMedio)
-            BoxText("Calorias", "${user.caloriasQueimadas} kcal")
+            BoxText("Tempo Ritmo", ritmoMedio)
+            BoxText("Calorias Queimadas", "${user.caloriasQueimadas} kcal")
         }
     }
 }
-
 @Composable
 fun BoxText(metadata: String, data: String) {
     Box(
@@ -281,7 +323,7 @@ fun BoxText(metadata: String, data: String) {
                 text = metadata,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
-                fontSize = 14.sp, // Ajuste leve na fonte
+                fontSize = 14.sp,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(5.dp))

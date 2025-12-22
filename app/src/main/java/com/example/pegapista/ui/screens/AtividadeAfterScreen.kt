@@ -137,7 +137,6 @@ fun AtividadeAfterScreen(
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
 
-
                 BlocoDados(valor = distanciaKmExibicao, label = "Km")
                 BlocoDados(valor = tempoExibicao, label = "Tempo")
                 BlocoDados(valor = paceAtual, label = "Ritmo (min/km)")
