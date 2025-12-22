@@ -51,16 +51,11 @@ fun RunFinishedScreen(
     val context = LocalContext.current
     var titulo by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
-
-    // Estados do ViewModel
     val uiState by viewModel.uiState.collectAsState()
     val fotoUri by viewModel.fotoSelecionadaUri.collectAsState()
-
-    // Variáveis para Câmera/Galeria
     var mostrarOpcoesFoto by remember { mutableStateOf(false) }
     var uriTemporaria by remember { mutableStateOf<Uri?>(null) }
 
-    // --- LAUNCHERS ---
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -86,7 +81,6 @@ fun RunFinishedScreen(
         }
     }
 
-    // Feedback de Sucesso/Erro
     LaunchedEffect(uiState) {
         if (uiState.isSuccess) {
             Toast.makeText(context, "Compartilhado no Feed!", Toast.LENGTH_SHORT).show()
@@ -97,7 +91,6 @@ fun RunFinishedScreen(
         }
     }
 
-    // --- LAYOUT ---
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -117,15 +110,13 @@ fun RunFinishedScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(bottom = 20.dp)
             ) {
-                // --- ÁREA DA FOTO (Clicável) ---
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
-                        .clickable { mostrarOpcoesFoto = true } // Clique na imagem abre opções
+                        .clickable { mostrarOpcoesFoto = true }
                 ) {
                     if (fotoUri != null) {
-                        // Foto escolhida pelo usuário
                         AsyncImage(
                             model = fotoUri,
                             contentDescription = "Foto da Corrida",
@@ -133,7 +124,6 @@ fun RunFinishedScreen(
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        // Imagem padrão (Mapa)
                         Image(
                             painter = painterResource(id = R.drawable.mapa_teste),
                             contentDescription = "Mapa Padrão",
@@ -142,7 +132,6 @@ fun RunFinishedScreen(
                         )
                     }
 
-                    // Ícone indicativo de "Editar" no canto
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
@@ -205,7 +194,7 @@ fun RunFinishedScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // BOTÃO COMPARTILHAR
+
         Button(
             onClick = {
                 viewModel.compartilharCorrida(
@@ -235,7 +224,6 @@ fun RunFinishedScreen(
         }
     }
 
-    // --- DIÁLOGO DE ESCOLHA DE FOTO ---
     if (mostrarOpcoesFoto) {
         AlertDialog(
             onDismissRequest = { mostrarOpcoesFoto = false },
@@ -257,7 +245,6 @@ fun RunFinishedScreen(
     }
 }
 
-// --- Funções Auxiliares (StatItem e Criação de Arquivo) ---
 
 @Composable
 fun StatItem(valor: String, unidade: String) {

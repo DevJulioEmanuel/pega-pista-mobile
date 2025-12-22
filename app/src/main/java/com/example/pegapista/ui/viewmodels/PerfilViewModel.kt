@@ -18,11 +18,9 @@ class PerfilViewModel : ViewModel() {
 
     private val repository = UserRepository()
 
-    // Estado do Usuário
     private val _userState = MutableStateFlow(Usuario(nickname = "Carregando..."))
     val userState = _userState.asStateFlow()
 
-    // Estado de Carregamento da Foto
     private val _isLoadingFoto = MutableStateFlow(false)
     val isLoadingFoto = _isLoadingFoto.asStateFlow()
 
@@ -49,7 +47,6 @@ class PerfilViewModel : ViewModel() {
             _isLoadingFoto.value = true
 
             try {
-                // 1. Upload para o Storage
                 val storageRef = FirebaseStorage.getInstance().reference
                 val nomeArquivo = "${usuarioAtual.id}/${UUID.randomUUID()}.jpg"
                 val fotoRef = storageRef.child("fotos_perfil/$nomeArquivo")
@@ -57,14 +54,12 @@ class PerfilViewModel : ViewModel() {
                 fotoRef.putFile(uriImagem).await()
                 val downloadUrl = fotoRef.downloadUrl.await().toString()
 
-                // 2. Atualizar no Firestore
                 FirebaseFirestore.getInstance()
                     .collection("usuarios")
                     .document(usuarioAtual.id)
                     .update("fotoPerfilUrl", downloadUrl)
                     .await()
 
-                // 3. Atualizar estado local
                 _userState.value = usuarioAtual.copy(fotoPerfilUrl = downloadUrl)
 
             } catch (e: Exception) {
