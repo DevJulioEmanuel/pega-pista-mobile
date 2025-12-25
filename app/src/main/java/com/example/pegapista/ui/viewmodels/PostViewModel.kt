@@ -29,8 +29,6 @@ class PostViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PostUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _fotoSelecionadaUri = MutableStateFlow<Uri?>(null)
-    val fotoSelecionadaUri = _fotoSelecionadaUri.asStateFlow()
     // ESTADO - FEED
     private val _feedState = MutableStateFlow<List<Postagem>>(emptyList())
     val feedState = _feedState.asStateFlow()
@@ -41,6 +39,10 @@ class PostViewModel : ViewModel() {
 
     // ESTADO - ID
     private val auth = FirebaseAuth.getInstance()
+
+    // IMAGENS
+    private val _fotoSelecionadaUri = MutableStateFlow<Uri?>(null)
+    val fotoSelecionadaUri = _fotoSelecionadaUri.asStateFlow()
     val meuId: String
         get() = auth.currentUser?.uid ?: ""
 
@@ -85,53 +87,53 @@ class PostViewModel : ViewModel() {
         _uiState.value = PostUiState(isLoading = true)
 
         viewModelScope.launch {
-            try {
-                val usuarioAtual = userRepository.getUsuarioAtual()
-                val nomeAutor = usuarioAtual.nickname
-                val fotoUri = _fotoSelecionadaUri.value
+            val usuarioAtual = userRepository.getUsuarioAtual()
 
-                var urlFotoFinal: String? = null
+            var urlFoto: String? = null
+            val uriAtual = _fotoSelecionadaUri.value
 
-                if (fotoUri != null) {
-                    try {
-                        val storageRef = FirebaseStorage.getInstance().reference
-                        val nomeArquivo = "corridas/${usuarioAtual.id}/${UUID.randomUUID()}.jpg"
-                        val fotoRef = storageRef.child(nomeArquivo)
+            if (uriAtual != null) {
+                urlFoto = repository.uploadImagem(uriAtual)
+            }
 
-                        fotoRef.putFile(fotoUri).await()
-                        urlFotoFinal = fotoRef.downloadUrl.await().toString()
-                    } catch (e: Exception) {
-                        Log.e("POST_VM", "Erro upload foto: ${e.message}")
-                    }
-                }
+            // 2. CRIA O POST COM A URL DA FOTO
+            val corridaDados = Corrida(
+                distanciaKm = distancia,
+                tempo = tempo,
+                pace = pace
+            )
 
-                val corridaDados = Corrida(
-                    distanciaKm = distancia,
-                    tempo = tempo,
-                    pace = pace
-                )
+            val novaPostagem = Postagem(
+                id = repository.gerarIdPost(),
+                autorNome = usuarioAtual.nickname,
+                userId = usuarioAtual.id,
+                titulo = titulo,
+                descricao = descricao,
+                corrida = corridaDados,
+                fotoUrl = urlFoto
+            )
 
-                val novoId = repository.gerarIdPost()
-                val novaPostagem = Postagem(
-                    id = novoId,
-                    autorNome = nomeAutor,
-                    titulo = titulo,
-                    descricao = descricao,
-                    corrida = corridaDados,
-                    fotoUrl = urlFotoFinal
-                )
+            val resultado = repository.criarPost(novaPostagem)
 
-                val resultado = repository.criarPost(novaPostagem)
+            resultado.onSuccess {
+                _uiState.value = PostUiState(isSuccess = true)
+            }.onFailure { e ->
+                _uiState.value = PostUiState(error = e.message ?: "Erro")
+            }
+        }
+    }
 
-                resultado.onSuccess {
-                    _uiState.value = PostUiState(isSuccess = true)
-                    carregarFeed()
-                }.onFailure { e ->
-                    _uiState.value = PostUiState(error = e.message ?: "Erro ao publicar")
-                }
+    fun excluirPost(postId: String) {
+        viewModelScope.launch {
+            _uiState.value = PostUiState(isLoading = true)
 
-            } catch (e: Exception) {
-                _uiState.value = PostUiState(error = "Erro geral: ${e.message}")
+            val resultado = repository.excluirPost(postId)
+
+            resultado.onSuccess {
+                carregarFeed()
+                _uiState.value = PostUiState(isSuccess = true)
+            }.onFailure { e ->
+                _uiState.value = PostUiState(error = "Erro ao excluir: ${e.message}")
             }
         }
     }

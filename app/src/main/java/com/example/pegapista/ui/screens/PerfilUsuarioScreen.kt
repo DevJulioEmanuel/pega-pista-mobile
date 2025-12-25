@@ -137,7 +137,7 @@ fun PerfilUsuarioScreen(
                     },
                     onCommentClick = {
 
-                    }
+                    },
                     )
             }
         }

@@ -21,6 +21,7 @@ import com.example.pegapista.ui.screens.PerfilScreen
 import com.example.pegapista.ui.screens.PerfilUsuarioScreen
 import com.example.pegapista.ui.screens.RankingScreen
 import com.example.pegapista.ui.screens.RunFinishedScreen
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 
 
@@ -64,7 +65,6 @@ fun NavigationGraph(
         composable("cadastro") {
             CadastroScreen(
                 onCadastroSucesso = {
-
                     navController.navigate("Home") {
                         popUpTo("inicio") { inclusive = true }
                     }
@@ -88,8 +88,12 @@ fun NavigationGraph(
 
         composable("AtividadeAfter") {
             AtividadeAfterScreen(
-                onFinishActivity = { dist, tempo, pace ->
+                onFinishActivity = { dist, tempo, pace, listaPontos ->
+                    navController.currentBackStackEntry?.savedStateHandle?.set("rota_gps", listaPontos)
                     navController.navigate("RunFinished/$dist/$tempo/$pace")
+                },
+                onCancelActivity = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -102,6 +106,10 @@ fun NavigationGraph(
                 navArgument("pace") { type = NavType.StringType }
             )
         ) { backStackEntry ->
+            val listaPontos = navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<List<LatLng>>("rota_gps") ?: emptyList()
+
             val distancia = backStackEntry.arguments?.getFloat("distancia")?.toDouble() ?: 0.0
             val tempo = backStackEntry.arguments?.getString("tempo") ?: "00:00"
             val pace = backStackEntry.arguments?.getString("pace") ?: "-:--"
@@ -110,6 +118,7 @@ fun NavigationGraph(
                 distancia = distancia,
                 tempo = tempo,
                 pace = pace,
+                caminhoPercorrido = listaPontos,
                 onFinishNavigation = {
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = true }

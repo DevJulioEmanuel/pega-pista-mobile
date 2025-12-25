@@ -4,12 +4,14 @@ import android.widget.Button
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,43 +21,59 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ModeComment
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.ModeComment
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.ui.viewmodels.PostViewModel
+import compartilharPost
 
 
 @Composable
@@ -69,6 +87,8 @@ fun FeedScreen(
     val postagens by viewModel.feedState.collectAsState()
     val meuId = viewModel.meuId
     val qtdComentarios = viewModel.comentariosState.collectAsState().value.size
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var postDeleteId by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(Unit) {
         viewModel.carregarFeed()
     }
@@ -160,11 +180,35 @@ fun FeedScreen(
                             onCommentClick = {
                                 onCommentClick(post)
                             },
+                            onDeleteClick = { postId ->
+                                showDeleteDialog = true
+                                postDeleteId = postId
+                            }
                         )
                     }
                 }
             }
-
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Excluir atividade?") },
+                    text = { Text("Essa ação não pode ser desfeita.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                postDeleteId?.let { id ->
+                                    viewModel.excluirPost(id)
+                                }
+                                showDeleteDialog = false
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                        ) { Text("Excluir") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                    }
+                )
+            }
 
         }
     }
@@ -176,10 +220,15 @@ fun PostCard(
     onLikeClick: () -> Unit,
     onCommentClick: (Postagem) -> Unit,
     currentUserId: String,
+    onDeleteClick: (String) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val euCurti = post.curtidas.contains(currentUserId)
     val qtdCurtidas = post.curtidas.size
     val qtdComentarios = post.qtdComentarios
+    val isUsuario = post.userId == currentUserId
+
+    var menuExpandido by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -202,7 +251,9 @@ fun PostCard(
                     tint = Color.Gray
                 )
                 Spacer(Modifier.width(5.dp))
-                Column {
+                Column (
+                    modifier = Modifier.weight(1f)
+                ){
                     Text(
                         text=post.autorNome,
                         fontWeight = FontWeight.Bold,
@@ -214,6 +265,43 @@ fun PostCard(
                         fontSize = 12.sp,
                         color = Color.DarkGray
                     )
+                }
+                Box {
+                    IconButton(onClick = { menuExpandido = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Opções",
+                            tint = Color.Gray
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpandido,
+                        onDismissRequest = { menuExpandido = false },
+                        containerColor = Color.White
+                    ) { DropdownMenuItem(
+                            text = { Text("Compartilhar") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Share, contentDescription = null)
+                            },
+                            onClick = {
+                                menuExpandido = false
+                                compartilharPost(context, post)
+                            }
+                        )
+                        if (isUsuario) {
+                            DropdownMenuItem(
+                                text = { Text("Excluir") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.DeleteOutline, contentDescription = null)
+                                },
+                                onClick = {
+                                    menuExpandido = false
+                                    onDeleteClick(post.id)
+                                }
+                            )
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(15.dp))
@@ -234,13 +322,16 @@ fun PostCard(
                 }
             }
             Spacer(Modifier.height(15.dp))
-            Image(
-                painter = painterResource(R.drawable.mapa_teste),
-                contentDescription = "Imagem do Mapa",
+            val foto = post.fotoUrl
+            AsyncImage(
+                model = foto,
+                contentDescription = "Foto do mapa",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(200.dp)
-
+                    .aspectRatio(4f / 3f),
+                contentScale = ContentScale.FillWidth,
+                placeholder = painterResource(R.drawable.jaco),
+                error = painterResource(R.drawable.jaco)
             )
             Spacer(Modifier.height(8.dp))
             Row(
