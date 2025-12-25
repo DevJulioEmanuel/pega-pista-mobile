@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,32 +38,53 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.pegapista.R
+import com.example.pegapista.ui.components.SnapshotMap
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PostViewModel
 import java.io.File
+import com.example.pegapista.utils.MapUtils
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.JointType
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.RoundCap
+import com.google.maps.android.compose.*
 
+@OptIn(MapsComposeExperimentalApi::class)
 @Composable
 fun RunFinishedScreen(
     distancia: Double = 0.00,
     tempo: String = "0:00",
     pace: String = "-:--",
+    caminhoPercorrido: List<LatLng> = emptyList(),
     onFinishNavigation: () -> Unit = {},
     viewModel: PostViewModel = viewModel()
 ) {
+    // ESTADOS
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+
+    // FORMULARIO
     var titulo by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
-    val uiState by viewModel.uiState.collectAsState()
-    val fotoUri by viewModel.fotoSelecionadaUri.collectAsState()
     var mostrarOpcoesFoto by remember { mutableStateOf(false) }
-    var uriTemporaria by remember { mutableStateOf<Uri?>(null) }
 
+    // ESTADO DO MAPA (GOOGLE MAPS)
+    val cameraPositionState = rememberCameraPositionState()
+
+    // DIALOGO PARA CONFIRMAR A EXCLUSAO DA ATIVIDADE
+    var showDiscardDialog by remember { mutableStateOf(false) }
+    BackHandler {
+        showDiscardDialog = true
+    }
+
+    // ARQUIVOS/IMAGENS
+    var uriTemporaria by remember { mutableStateOf<Uri?>(null) }
+    val fotoUri by viewModel.fotoSelecionadaUri.collectAsState()
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) viewModel.selecionarFotoLocal(uri)
     }
-
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { sucesso ->
@@ -96,10 +119,32 @@ fun RunFinishedScreen(
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.primary)
             .padding(20.dp)
-            .verticalScroll(rememberScrollState()), // Adicionei scroll para telas pequenas
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            IconButton(onClick = { showDiscardDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cancelar e Sair",
+                    tint = Color.White
+                )
+            }
+            Text(
+                text = "Nova Publicação",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
         Card(
             modifier = Modifier.fillMaxWidth().wrapContentHeight(),
             shape = RoundedCornerShape(16.dp),
@@ -113,7 +158,7 @@ fun RunFinishedScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .aspectRatio(4f / 3f)
                         .clickable { mostrarOpcoesFoto = true }
                 ) {
                     if (fotoUri != null) {
@@ -124,12 +169,22 @@ fun RunFinishedScreen(
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.mapa_teste),
-                            contentDescription = "Mapa Padrão",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        if (caminhoPercorrido.isNotEmpty()) {
+                            SnapshotMap(
+                                caminhoPercorrido = caminhoPercorrido,
+                                context = context,
+                                onSnapshotPronto = { uri ->
+                                    viewModel.selecionarFotoLocal(uri)
+                                }
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier.fillMaxSize().background(Color.LightGray),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Rota não disponível", color = Color.White)
+                            }
+                        }
                     }
 
                     Box(
@@ -240,6 +295,26 @@ fun RunFinishedScreen(
                     mostrarOpcoesFoto = false
                     permissaoLauncher.launch(Manifest.permission.CAMERA)
                 }) { Text("Câmera") }
+            }
+        )
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text("Sair sem postar?") },
+            text = { Text("Se você sair agora, essa corrida ficará salva no seu histórico, mas não será publicada no Feed.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onFinishNavigation()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                ) { Text("Sair") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) { Text("Continuar Editando") }
             }
         )
     }

@@ -44,7 +44,7 @@ android {
 
 dependencies {
     // --- Mapas e Localização ---
-    implementation("com.google.maps.android:maps-compose:6.2.1")
+    implementation("com.google.maps.android:maps-compose:6.12.0")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.firebase:firebase-storage")
@@ -78,6 +78,7 @@ dependencies {
 
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.material3)
 
 
     // --- Testes ---

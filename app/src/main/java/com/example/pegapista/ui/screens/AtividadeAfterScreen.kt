@@ -2,10 +2,13 @@ package com.example.pegapista.ui.screens
 
 import android.Manifest
 import android.net.http.SslCertificate.saveState
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import com.example.pegapista.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
@@ -22,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -29,12 +33,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,21 +54,24 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.CorridaViewModel
+import com.google.android.gms.maps.model.LatLng
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AtividadeAfterScreen(
     viewModel: CorridaViewModel = viewModel(),
-    onFinishActivity: (distancia: Double, tempo: String, pace: String) -> Unit
+    onFinishActivity: (distancia: Double, tempo: String, pace: String, List<LatLng>) -> Unit,
+    onCancelActivity: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-
     val context = LocalContext.current
 
-    val distanciaMetros by viewModel.distancia.observeAsState(0f)
-    val tempoSegundos by viewModel.tempoSegundos.observeAsState(0L)
-    val paceAtual by viewModel.pace.observeAsState("-:--")
-    val isRastreando by viewModel.isRastreando.observeAsState(false)
+    val percurso by viewModel.percurso.collectAsState()
+    val distanciaMetros by viewModel.distancia.collectAsState()
+    val tempoSegundos by viewModel.tempoSegundos.collectAsState()
+    val paceAtual by viewModel.pace.collectAsState()
+    val isRastreando by viewModel.isRastreando.collectAsState()
     val saveState by viewModel.saveState.collectAsState()
     val distanciaKmExibicao = "%.2f".format(distanciaMetros / 1000)
 
@@ -73,13 +83,40 @@ fun AtividadeAfterScreen(
         else "%02d:%02d".format(minutos, segundos)
     }
 
+    // FUNCIONALIDADE CANCELAR CORRIDA
+    var showDiscardDialog by remember { mutableStateOf(false) }
+    BackHandler {
+        showDiscardDialog = true
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text("Cancelar corrida?") },
+            text = { Text("Tem certeza que deseja cancelar a corrida?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onCancelActivity()
+                        viewModel.finalizarCorrida()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                ) { Text("Cancelar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) { Text("Continuar Corrida") }
+            }
+        )
+    }
+
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val fine = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarse = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-        if (fine || coarse) {
+        val fineLocation = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocation = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        if (fineLocation || coarseLocation) {
             viewModel.iniciarCorrida()
         } else {
             Toast.makeText(context, "GPS necessário para rastrear", Toast.LENGTH_SHORT).show()
@@ -87,24 +124,28 @@ fun AtividadeAfterScreen(
     }
 
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        val permissoes = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
         )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissoes.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        permissionLauncher.launch(permissoes.toTypedArray())
     }
 
     LaunchedEffect(saveState) {
         if (saveState.isSuccess) {
             val distanciaKm = (distanciaMetros / 1000).toDouble()
             val tempoFormatado = viewModel.formatarTempoParaString(tempoSegundos)
-
-            onFinishActivity(distanciaKm, tempoFormatado, paceAtual)
+            onFinishActivity(distanciaKm, tempoFormatado, paceAtual, percurso)
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -165,9 +206,7 @@ fun AtividadeAfterScreen(
 
                     Button(
                         onClick = {
-                            val distanciaKm = (distanciaMetros / 1000).toDouble()
-                            val tempoFormatado = viewModel.formatarTempoParaString(tempoSegundos)
-                            onFinishActivity(distanciaKm, tempoFormatado, paceAtual)
+                            viewModel.finalizarESalvarCorrida()
                                   },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0FDC52)),
                         shape = RoundedCornerShape(50),
@@ -212,6 +251,6 @@ fun BlocoDados(valor: String, label: String) {
 @Composable
 fun AtividadeAfterScreenPreview() {
     PegaPistaTheme {
-        AtividadeAfterScreen(onFinishActivity = {} as (Double, String, String) -> Unit)
+        //AtividadeAfterScreen(onFinishActivity = {} as (Double, String, String) -> Unit)
     }
 }

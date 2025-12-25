@@ -38,7 +38,7 @@ class LocationManager(context: Context) {
 
                     val anterior = locationAnterior!!
                     val distanciaDoPulo = anterior.distanceTo(location)
-                    val isPontoValido = location.accuracy <= 40 && distanciaDoPulo >= 2
+                    val isPontoValido = location.accuracy <= 20 && distanciaDoPulo >= 4
 
                     if (isPontoValido) {
                         distanciaTotal += distanciaDoPulo
