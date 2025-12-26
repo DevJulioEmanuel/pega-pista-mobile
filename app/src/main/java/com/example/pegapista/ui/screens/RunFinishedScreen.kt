@@ -13,11 +13,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
@@ -70,6 +73,7 @@ fun RunFinishedScreen(
 
     // ESTADO DO MAPA (GOOGLE MAPS)
     val cameraPositionState = rememberCameraPositionState()
+    var mapaAdicionado by remember { mutableStateOf(false) }
 
     // DIALOGO PARA CONFIRMAR A EXCLUSAO DA ATIVIDADE
     var showDiscardDialog by remember { mutableStateOf(false) }
@@ -79,17 +83,17 @@ fun RunFinishedScreen(
 
     // ARQUIVOS/IMAGENS
     var uriTemporaria by remember { mutableStateOf<Uri?>(null) }
-    val fotoUri by viewModel.fotoSelecionadaUri.collectAsState()
+    val listaFotos by viewModel.fotosSelecionadasUris.collectAsState()
     val galeriaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null) viewModel.selecionarFotoLocal(uri)
+        contract = ActivityResultContracts.PickMultipleVisualMedia(5)
+    ) { uris ->
+        uris.forEach { viewModel.adicionarFoto(it) }
     }
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { sucesso ->
         if (sucesso && uriTemporaria != null) {
-            viewModel.selecionarFotoLocal(uriTemporaria!!)
+            viewModel.adicionarFoto(uriTemporaria!!)
         }
     }
 
@@ -158,49 +162,58 @@ fun RunFinishedScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(4f / 3f)
+                        .aspectRatio(4f / 4f)
                         .clickable { mostrarOpcoesFoto = true }
                 ) {
-                    if (fotoUri != null) {
-                        AsyncImage(
-                            model = fotoUri,
-                            contentDescription = "Foto da Corrida",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        if (caminhoPercorrido.isNotEmpty()) {
+                        if (listaFotos.isNotEmpty()) {
+                            val pagerState = rememberPagerState(pageCount = { listaFotos.size })
+
+                            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                                AsyncImage(
+                                    model = listaFotos[page],
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            if (listaFotos.size > 1) {
+                                Row(
+                                    Modifier.align(Alignment.BottomCenter).padding(8.dp),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    repeat(listaFotos.size) { iteration ->
+                                        val color = if (pagerState.currentPage == iteration) Color.White else Color.White.copy(0.5f)
+                                        Box(modifier = Modifier.padding(2.dp).clip(CircleShape).background(color).size(6.dp))
+                                    }
+                                }
+                            }
+                        }
+
+                        // CENÁRIO 2: A lista está vazia (Mapa ainda não gerou) -> Mostra o Mapa para gerar a foto
+                        else if (caminhoPercorrido.isNotEmpty() && !mapaAdicionado) {
                             SnapshotMap(
                                 caminhoPercorrido = caminhoPercorrido,
                                 context = context,
                                 onSnapshotPronto = { uri ->
-                                    viewModel.selecionarFotoLocal(uri)
+                                    viewModel.adicionarFoto(uri)
+                                    mapaAdicionado = true
                                 }
                             )
-                        } else {
-                            Box(
-                                modifier = Modifier.fillMaxSize().background(Color.LightGray),
-                                contentAlignment = Alignment.Center
+                        }
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(12.dp)
+                        ) {
+                            FloatingActionButton(
+                                onClick = { galeriaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                                containerColor = Color.Black.copy(alpha = 0.7f),
+                                contentColor = Color.White,
+                                modifier = Modifier.size(40.dp)
                             ) {
-                                Text("Rota não disponível", color = Color.White)
+                                Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Add Fotos")
                             }
                         }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(10.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
-                            .padding(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Alterar foto",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
