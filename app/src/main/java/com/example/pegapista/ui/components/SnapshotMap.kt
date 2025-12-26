@@ -30,7 +30,7 @@ fun SnapshotMap(
     GoogleMap(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(4f / 3f),
+            .aspectRatio(4f / 4),
         cameraPositionState = cameraPositionState,
         properties = MapProperties(
             mapType = MapType.NORMAL,

@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -54,6 +56,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toString
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,6 +77,9 @@ import com.example.pegapista.R
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.ui.viewmodels.PostViewModel
 import compartilharPost
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @Composable
@@ -92,7 +98,6 @@ fun FeedScreen(
     LaunchedEffect(Unit) {
         viewModel.carregarFeed()
     }
-
 
     Column(
         modifier = Modifier.background(Color.White)
@@ -133,7 +138,6 @@ fun FeedScreen(
 
         }
 
-
         Column(
             modifier = modifier
                 .fillMaxSize(),
@@ -173,6 +177,7 @@ fun FeedScreen(
                     items(postagens) { post ->
                         PostCard(
                             post = post,
+                            data = viewModel.formatarDataHora(post.data),
                             currentUserId = meuId,
                             onLikeClick = {
                                 viewModel.toggleCurtidaPost(post)
@@ -217,6 +222,7 @@ fun FeedScreen(
 @Composable
 fun PostCard(
     post: Postagem,
+    data: String = "",
     onLikeClick: () -> Unit,
     onCommentClick: (Postagem) -> Unit,
     currentUserId: String,
@@ -227,6 +233,8 @@ fun PostCard(
     val qtdCurtidas = post.curtidas.size
     val qtdComentarios = post.qtdComentarios
     val isUsuario = post.userId == currentUserId
+
+    val listaImagens = post.urlsFotos
 
     var menuExpandido by remember { mutableStateOf(false) }
     Card(
@@ -261,7 +269,7 @@ fun PostCard(
                         color = Color.DarkGray
                     )
                     Text(
-                        text="Atleta PegaPista",
+                        text=data,
                         fontSize = 12.sp,
                         color = Color.DarkGray
                     )
@@ -312,6 +320,13 @@ fun PostCard(
                     fontWeight = FontWeight.Medium,
                     color = Color.DarkGray
                 )
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    text = post.descricao,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Light,
+                    color = Color.DarkGray
+                )
                 Spacer(Modifier.height(12.dp))
                 Row {
                     metadadosCorrida("%.2f km".format(post.corrida.distanciaKm), "Distância")
@@ -322,17 +337,45 @@ fun PostCard(
                 }
             }
             Spacer(Modifier.height(15.dp))
-            val foto = post.fotoUrl
-            AsyncImage(
-                model = foto,
-                contentDescription = "Foto do mapa",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(4f / 3f),
-                contentScale = ContentScale.FillWidth,
-                placeholder = painterResource(R.drawable.jaco),
-                error = painterResource(R.drawable.jaco)
-            )
+            if (listaImagens.isNotEmpty()) {
+                val pagerState = rememberPagerState(pageCount = { listaImagens.size })
+
+                Box {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(4f / 4f)
+                    ) { page ->
+                        AsyncImage(
+                            model = listaImagens[page],
+                            contentDescription = "Foto da atividade",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    if (listaImagens.size > 1) {
+                        Row(
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 10.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            repeat(listaImagens.size) { iteration ->
+                                val color = if (pagerState.currentPage == iteration) Color.White else Color.White.copy(alpha = 0.5f)
+                                Box(
+                                    modifier = Modifier
+                                        .padding(3.dp)
+                                        .clip(CircleShape)
+                                        .background(color)
+                                        .size(8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             Spacer(Modifier.height(8.dp))
             Row(
 
@@ -391,7 +434,6 @@ fun metadadosCorrida(dado: String, metadado: String) {
         )
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

@@ -9,13 +9,20 @@ import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.repository.PostRepository
 import com.example.pegapista.data.repository.UserRepository
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
+
 
 data class PostUiState(
     val isLoading: Boolean = false,
@@ -29,6 +36,8 @@ class PostViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PostUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val storage = Firebase.storage
+
     // ESTADO - FEED
     private val _feedState = MutableStateFlow<List<Postagem>>(emptyList())
     val feedState = _feedState.asStateFlow()
@@ -40,9 +49,9 @@ class PostViewModel : ViewModel() {
     // ESTADO - ID
     private val auth = FirebaseAuth.getInstance()
 
-    // IMAGENS
-    private val _fotoSelecionadaUri = MutableStateFlow<Uri?>(null)
-    val fotoSelecionadaUri = _fotoSelecionadaUri.asStateFlow()
+    // IMAGENS (agora no plural - JULIO EMANUEL)
+    private val _fotosSelecionadasUris = MutableStateFlow<List<Uri>>(emptyList())
+    val fotosSelecionadasUris: StateFlow<List<Uri>> = _fotosSelecionadasUris
     val meuId: String
         get() = auth.currentUser?.uid ?: ""
 
@@ -73,10 +82,30 @@ class PostViewModel : ViewModel() {
         }
     }
 
-    fun selecionarFotoLocal(uri: Uri) {
-        _fotoSelecionadaUri.value = uri
+    fun adicionarFoto(uri: Uri) {
+        _fotosSelecionadasUris.value += uri
     }
 
+    fun limparFotos() {
+        _fotosSelecionadasUris.value = emptyList()
+    }
+    private suspend fun uploadImagens(uris: List<Uri>): List<String> {
+        val urlsDownload = mutableListOf<String>()
+
+        for (uri in uris) {
+            val nomeArquivo = "${System.currentTimeMillis()}_${uri.lastPathSegment}"
+            val ref = storage.reference.child("posts_images/$nomeArquivo")
+
+            try {
+                ref.putFile(uri).await()
+                val url = ref.downloadUrl.await().toString()
+                urlsDownload.add(url)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return urlsDownload
+    }
     fun compartilharCorrida(
         titulo: String,
         descricao: String,
@@ -88,21 +117,13 @@ class PostViewModel : ViewModel() {
 
         viewModelScope.launch {
             val usuarioAtual = userRepository.getUsuarioAtual()
+            val listaDeUrls = uploadImagens(_fotosSelecionadasUris.value)
 
-            var urlFoto: String? = null
-            val uriAtual = _fotoSelecionadaUri.value
-
-            if (uriAtual != null) {
-                urlFoto = repository.uploadImagem(uriAtual)
-            }
-
-            // 2. CRIA O POST COM A URL DA FOTO
             val corridaDados = Corrida(
                 distanciaKm = distancia,
                 tempo = tempo,
                 pace = pace
             )
-
             val novaPostagem = Postagem(
                 id = repository.gerarIdPost(),
                 autorNome = usuarioAtual.nickname,
@@ -110,7 +131,8 @@ class PostViewModel : ViewModel() {
                 titulo = titulo,
                 descricao = descricao,
                 corrida = corridaDados,
-                fotoUrl = urlFoto
+                urlsFotos = listaDeUrls,
+                data = System.currentTimeMillis()
             )
 
             val resultado = repository.criarPost(novaPostagem)
@@ -185,5 +207,10 @@ class PostViewModel : ViewModel() {
             val lista = repository.getComentarios(postId)
             _comentariosState.value = lista
         }
+    }
+
+    fun formatarDataHora(timestamp: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy 'às' HH:mm", Locale("pt", "BR"))
+        return sdf.format(Date(timestamp))
     }
 }

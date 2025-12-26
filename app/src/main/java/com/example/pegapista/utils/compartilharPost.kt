@@ -14,7 +14,9 @@ import java.io.File
 import java.io.FileOutputStream
 
 fun compartilharPost(context: Context, post: Postagem) {
-    val textoCompartilhar = """
+    val urlImagem = post.urlsFotos.firstOrNull()
+
+    val textoLegenda = """
         🏃‍♂️ *Corrida no PegaPista!*
         
         👤 ${post.autorNome}
@@ -23,14 +25,24 @@ fun compartilharPost(context: Context, post: Postagem) {
         ⚡ Pace: ${post.corrida.pace}
         
         ${post.titulo}
+        ${post.descricao}
     """.trimIndent()
+
+    if (urlImagem == null) {
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, textoLegenda)
+            type = "text/plain"
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Compartilhar..."))
+        return
+    }
 
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            // 1. BAIXAR A IMAGEM USANDO COIL
             val loader = ImageLoader(context)
             val request = ImageRequest.Builder(context)
-                .data(post.fotoUrl)
+                .data(urlImagem)
                 .allowHardware(false)
                 .build()
 
@@ -56,8 +68,7 @@ fun compartilharPost(context: Context, post: Postagem) {
 
                 val shareIntent = Intent().apply {
                     action = Intent.ACTION_SEND
-                    // Manda Texto E Imagem
-                    putExtra(Intent.EXTRA_TEXT, textoCompartilhar)
+                    putExtra(Intent.EXTRA_TEXT, textoLegenda)
                     putExtra(Intent.EXTRA_STREAM, contentUri)
                     type = "image/jpeg"
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -69,10 +80,10 @@ fun compartilharPost(context: Context, post: Postagem) {
             e.printStackTrace()
             val shareIntent = Intent().apply {
                 action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, textoCompartilhar)
+                putExtra(Intent.EXTRA_TEXT, textoLegenda)
                 type = "text/plain"
             }
-            context.startActivity(Intent.createChooser(shareIntent, "Compartilhar (sem foto)..."))
+            context.startActivity(Intent.createChooser(shareIntent, "Compartilhar (erro na img)..."))
         }
     }
 }
