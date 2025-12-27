@@ -69,8 +69,10 @@ import kotlin.math.sin
 
 @Composable
 fun HomeScreen(
+    usuario: Usuario?,
     onIniciarCorrida: () -> Unit
 ) {
+    val dias = usuario?.diasSeguidos ?: 0
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
@@ -123,7 +125,7 @@ fun HomeScreen(
                             modifier = Modifier.offset(y = 10.dp).zIndex(1f) //deixar um por cima do oto
                         ) {
                             Text(
-                                text = "Sequência de 13 dias consecutivos",
+                                text = "Sequência de $dias dias consecutivos",
                                 color = Color.Black,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
