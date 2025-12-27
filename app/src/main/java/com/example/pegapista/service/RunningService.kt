@@ -39,34 +39,27 @@ class RunningService : Service() {
 
         RunningState.isRastreando.value = true
 
-        // Inicia a Notificação Fixa (Obrigatório para não morrer)
         startForeground(notificationId, buildNotification())
 
-        // 1. Inicia o GPS
         locationManager.startTracking(object : LocationManager.LocationListener {
             override fun onLocationUpdate(velKmh: Double, distMetros: Float, loc: Location) {
-                // Atualiza o Estado Global
                 RunningState.distanciaMetros.value = distMetros
 
-                // Adiciona ponto na lista
                 val novoPonto = LatLng(loc.latitude, loc.longitude)
                 val listaAtual = RunningState.percurso.value.toMutableList()
                 listaAtual.add(novoPonto)
                 RunningState.percurso.value = listaAtual
 
-                // Atualiza notificação com a distância nova
                 updateNotification("Distância: %.2f km".format(distMetros / 1000))
             }
         })
 
-        // 2. Inicia o Timer (Cronômetro)
         serviceScope.launch {
             while (RunningState.isRastreando.value) {
                 delay(1000L)
                 val novoTempo = RunningState.tempoSegundos.value + 1
                 RunningState.tempoSegundos.value = novoTempo
 
-                // Cálculo simples de Pace aqui ou no LocationListener
                 calcularPace(RunningState.distanciaMetros.value, novoTempo)
             }
         }
@@ -96,7 +89,6 @@ class RunningService : Service() {
         }
     }
 
-    // --- Parte Chata: Notificações (Obrigatória) ---
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -113,7 +105,7 @@ class RunningService : Service() {
         return NotificationCompat.Builder(this, "running_channel")
             .setContentTitle("PegaPista Ativo")
             .setContentText("Rastreando sua corrida...")
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Use um ícone válido seu aqui
+            .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
             .build()
     }
@@ -122,9 +114,9 @@ class RunningService : Service() {
         val notification = NotificationCompat.Builder(this, "running_channel")
             .setContentTitle("PegaPista Ativo")
             .setContentText(texto)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
-            .setOnlyAlertOnce(true) // Evita barulho a cada atualização
+            .setOnlyAlertOnce(true)
             .build()
 
         val manager = getSystemService(NotificationManager::class.java)

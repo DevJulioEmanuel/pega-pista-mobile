@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.data.models.Comentario
+import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.viewmodels.PostViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -29,6 +30,7 @@ import java.util.Locale
 @Composable
 fun ComentariosScreen(
     postId: String,
+    remetenteId: String,
     onVoltar: () -> Unit,
     viewModel: PostViewModel = viewModel()
 ) {
@@ -80,8 +82,6 @@ fun ComentariosScreen(
                     ItemComentario(comentario)
                 }
             }
-
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,7 +106,7 @@ fun ComentariosScreen(
                 IconButton(
                     onClick = {
                         if (textoComentario.isNotBlank()) {
-                            viewModel.enviarComentario(postId, textoComentario)
+                            viewModel.enviarComentario(postId, remetenteId, texto = textoComentario)
                             textoComentario = ""
                         }
                     },

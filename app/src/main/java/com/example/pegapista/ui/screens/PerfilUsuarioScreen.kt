@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 
@@ -51,8 +50,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
+import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.models.Usuario
-import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
 import com.example.pegapista.ui.viewmodels.PostViewModel
 
@@ -61,6 +60,7 @@ fun PerfilUsuarioScreen(
     modifier: Modifier = Modifier.background(Color.White),
     viewModel: PerfilUsuarioViewModel = viewModel(),
     postsviewModel: PostViewModel = viewModel(),
+    onCommentClick: (Postagem) -> Unit,
     idUsuario: String = ""
 ) {
     val usuario by viewModel.userState.collectAsState()
@@ -68,6 +68,7 @@ fun PerfilUsuarioScreen(
     val scrollState = rememberScrollState()
     val isSeguindo by viewModel.isSeguindo.collectAsState()
     val posts by viewModel.postsUsuario.collectAsState()
+    val meuId = postsviewModel.meuId
 
 
     LaunchedEffect(Unit) {
@@ -131,12 +132,14 @@ fun PerfilUsuarioScreen(
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 PostCard(
                     post = post,
-                    currentUserId = "",
+                    data = postsviewModel.formatarDataHora(post.data),
+                    currentUserId = meuId,
                     onLikeClick = {
                         postsviewModel.toggleCurtidaPost(post)
+                        viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
                     },
                     onCommentClick = {
-
+                        onCommentClick(post)
                     },
                     )
             }
@@ -146,10 +149,6 @@ fun PerfilUsuarioScreen(
             Spacer(Modifier.height(50.dp))
         }
     }
-
-
-
-
         Spacer(Modifier.height(20.dp))
     }
 
@@ -310,9 +309,6 @@ fun BoxUsuarioText(metadata: String, data: String) {
     }
 }
 
-fun BotaoSeguir() {
-
-}
 
 fun formatarUsuarioHoras(segundos: Long): String {
     val horas = segundos / 3600
