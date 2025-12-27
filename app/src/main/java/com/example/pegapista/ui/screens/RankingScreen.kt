@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,9 +18,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +39,8 @@ import com.example.pegapista.R
 @Composable
 fun RankingScreen(
     modifier: Modifier = Modifier.background(Color.White),
-    onFeedScreen: () -> Unit
+    onFeedScreen: () -> Unit,
+    onBuscarAmigosScreen: () -> Unit
 ){
     var posição = 1
     val scrollState = rememberScrollState()
@@ -45,11 +50,42 @@ fun RankingScreen(
             .background(Color.White),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = painterResource(R.drawable.logo_aplicativo),
-            contentDescription = "",
-            modifier = Modifier.size(70.dp).align(Alignment.CenterHorizontally)
-        )
+        Box(
+            modifier = Modifier.height(60.dp).fillMaxWidth()
+        ){
+            Text(
+                text = "Comunidade",
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 12.dp),
+                fontSize = 24.sp,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Row(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Pesquisar amigos",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 15.sp
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(onClick = { onBuscarAmigosScreen() }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = "Pesquisar Amigos",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+        }
+
 
         Column(
             modifier = modifier
@@ -64,16 +100,16 @@ fun RankingScreen(
                 Button(
                     onClick = onFeedScreen,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFFFFF)),
-                    border = BorderStroke(2.dp, Color.Blue),
+                    border = BorderStroke(2.dp, Color.Gray),
                     shape = RoundedCornerShape(50)
                 ){
 
-                    Text("Feed", color = Color.Blue, fontWeight = FontWeight.Bold)
+                    Text("Feed", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
                 Button(
-                    onClick = { /* Ir para tela ranking */ },
+                    onClick = {  },
 
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF033BCC)),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
 
                     shape = RoundedCornerShape(50)
                 ){
@@ -98,13 +134,12 @@ fun RankingScreen(
         )
     }
 
-
 }
 @Composable
 fun ItemRanking(nome: String, info: String, sequencia: Int, posição: Int) {
 
     Surface(
-        color = Color(0xFF0277BD),
+        color = MaterialTheme.colorScheme.primary,
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()

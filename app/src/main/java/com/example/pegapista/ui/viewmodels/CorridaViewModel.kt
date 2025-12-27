@@ -1,7 +1,10 @@
 package com.example.pegapista.ui.viewmodels
 
 import android.app.Application
+import android.content.Intent
 import android.location.Location
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,6 +12,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.pegapista.data.manager.LocationManager
 import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.data.repository.CorridaRepository
+import com.example.pegapista.service.RunningService
+import com.example.pegapista.service.RunningState
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,117 +30,69 @@ data class SaveRunState(
 class CorridaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = CorridaRepository()
-    private val locationManager = LocationManager(application)
-
-    private val _distancia = MutableLiveData(0f)
-    val distancia: LiveData<Float> = _distancia
-
-    private val _tempoSegundos = MutableLiveData(0L)
-    val tempoSegundos: LiveData<Long> = _tempoSegundos
-
-    private val _pace = MutableLiveData("-:--") // Começa com traço
-    val pace: LiveData<String> = _pace
-
-    private val _isRastreando = MutableLiveData(false)
-    val isRastreando: LiveData<Boolean> = _isRastreando
-
     private val _saveState = MutableStateFlow(SaveRunState())
     val saveState = _saveState.asStateFlow()
 
-    private var timerJob: Job? = null
+    val distancia = RunningState.distanciaMetros
+    val tempoSegundos = RunningState.tempoSegundos
+    val pace = RunningState.pace
+    val isRastreando = RunningState.isRastreando
+    val percurso = RunningState.percurso
 
 
     fun toggleRastreamento() {
-        if (_isRastreando.value == true) {
-            pausarCorrida()
+        val intent = Intent(getApplication(), RunningService::class.java)
+        if (isRastreando.value) {
+            intent.action = "PAUSE"
         } else {
-            iniciarCorrida()
+            intent.action = "START"
         }
+        getApplication<Application>().startService(intent)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun iniciarCorrida() {
-        if (_isRastreando.value == true) return
+        RunningState.tempoSegundos.value = 0L
+        RunningState.distanciaMetros.value = 0f
+        RunningState.pace.value = "-:--"
+        RunningState.percurso.value = emptyList()
 
-        _isRastreando.value = true
-
-        locationManager.startTracking(object : LocationManager.LocationListener {
-            override fun onLocationUpdate(velKmh: Double, distMetros: Float, loc: Location) {
-                _distancia.postValue(distMetros)
-                calcularPace(distMetros, _tempoSegundos.value ?: 0L)
-            }
-        })
-
-        startTimer()
+        val intent = Intent(getApplication(), RunningService::class.java)
+        intent.action = "START"
+        getApplication<Application>().startForegroundService(intent)
     }
-
-    fun pausarCorrida() {
-        _isRastreando.value = false
-        locationManager.stopTracking()
-        timerJob?.cancel()
-    }
-
 
     fun finalizarESalvarCorrida() {
-        pausarCorrida()
+        val intent = Intent(getApplication(), RunningService::class.java)
+        intent.action = "STOP"
+        getApplication<Application>().startService(intent)
 
         _saveState.value = SaveRunState(isLoading = true)
 
         viewModelScope.launch {
-            val distMetros = _distancia.value ?: 0f
-            val tempoSec = _tempoSegundos.value ?: 0L
-            val paceAtual = _pace.value ?: "-:--"
-
-            val novoId = repository.gerarIdCorrida()
+            val distFinal = RunningState.distanciaMetros.value
+            val tempoFinal = RunningState.tempoSegundos.value
+            val paceFinal = RunningState.pace.value
 
             val novaCorrida = Corrida(
-                id = novoId,
-                distanciaKm = (distMetros / 1000).toDouble(),
-                tempo = formatarTempoParaString(tempoSec),
-                pace = paceAtual
+                id = repository.gerarIdCorrida(),
+                distanciaKm = (distFinal / 1000).toDouble(),
+                tempo = formatarTempoParaString(tempoFinal),
+                pace = paceFinal
             )
 
-            val resultado = repository.salvarCorrida(novaCorrida)
-
-            resultado.onSuccess {
+            repository.salvarCorrida(novaCorrida).onSuccess {
                 _saveState.value = SaveRunState(isSuccess = true)
-            }.onFailure { e ->
-                _saveState.value = SaveRunState(error = e.message ?: "Erro desconhecido")
+            }.onFailure {
+                _saveState.value = SaveRunState(error = it.message)
             }
         }
     }
 
-
-    private fun startTimer() {
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            while (_isRastreando.value == true) {
-                delay(1000)
-                val novoTempo = (_tempoSegundos.value ?: 0L) + 1
-                _tempoSegundos.postValue(novoTempo)
-
-                calcularPace(_distancia.value ?: 0f, novoTempo)
-            }
-        }
-    }
-
-    private fun calcularPace(distanciaMetros: Float, segundos: Long) {
-        if (distanciaMetros < 50) {
-            _pace.postValue("-:--")
-            return
-        }
-
-        val distanciaKm = distanciaMetros / 1000.0
-        val tempoMinutos = segundos / 60.0
-
-        if (distanciaKm > 0) {
-            val paceDec = tempoMinutos / distanciaKm
-            val minutos = paceDec.toInt()
-            val segundosRestantes = ((paceDec - minutos) * 60).toInt()
-
-            if (minutos < 60) {
-                _pace.postValue("%d:%02d".format(minutos, segundosRestantes))
-            }
-        }
+    fun finalizarCorrida() {
+        val intent = Intent(getApplication(), RunningService::class.java)
+        intent.action = "STOP"
+        getApplication<Application>().startService(intent)
     }
 
     fun formatarTempoParaString(segundos: Long): String {
@@ -145,9 +103,4 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
         else "%02d:%02d".format(minutos, segs)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        locationManager.stopTracking()
-        timerJob?.cancel()
-    }
 }
