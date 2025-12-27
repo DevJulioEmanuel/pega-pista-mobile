@@ -1,5 +1,7 @@
 package com.example.pegapista.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -9,19 +11,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.pegapista.ui.screens.AtividadeAfterScreen
 import com.example.pegapista.ui.screens.AtividadeBeforeScreen
+import com.example.pegapista.ui.screens.BuscarAmigosScreen
 import com.example.pegapista.ui.screens.CadastroScreen
+import com.example.pegapista.ui.screens.ComentariosScreen
 import com.example.pegapista.ui.screens.FeedScreen
 import com.example.pegapista.ui.screens.HomeScreen
 import com.example.pegapista.ui.screens.InicioScreen
 import com.example.pegapista.ui.screens.LoginScreen
 import com.example.pegapista.ui.screens.NotificacoesScreen
 import com.example.pegapista.ui.screens.PerfilScreen
+import com.example.pegapista.ui.screens.PerfilUsuarioScreen
 import com.example.pegapista.ui.screens.RankingScreen
 import com.example.pegapista.ui.screens.RunFinishedScreen
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
@@ -61,7 +68,6 @@ fun NavigationGraph(
         composable("cadastro") {
             CadastroScreen(
                 onCadastroSucesso = {
-
                     navController.navigate("Home") {
                         popUpTo("inicio") { inclusive = true }
                     }
@@ -85,8 +91,12 @@ fun NavigationGraph(
 
         composable("AtividadeAfter") {
             AtividadeAfterScreen(
-                onFinishActivity = { dist, tempo, pace ->
+                onFinishActivity = { dist, tempo, pace, listaPontos ->
+                    navController.currentBackStackEntry?.savedStateHandle?.set("rota_gps", listaPontos)
                     navController.navigate("RunFinished/$dist/$tempo/$pace")
+                },
+                onCancelActivity = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -99,6 +109,10 @@ fun NavigationGraph(
                 navArgument("pace") { type = NavType.StringType }
             )
         ) { backStackEntry ->
+            val listaPontos = navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<List<LatLng>>("rota_gps") ?: emptyList()
+
             val distancia = backStackEntry.arguments?.getFloat("distancia")?.toDouble() ?: 0.0
             val tempo = backStackEntry.arguments?.getString("tempo") ?: "00:00"
             val pace = backStackEntry.arguments?.getString("pace") ?: "-:--"
@@ -107,6 +121,7 @@ fun NavigationGraph(
                 distancia = distancia,
                 tempo = tempo,
                 pace = pace,
+                caminhoPercorrido = listaPontos,
                 onFinishNavigation = {
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = true }
@@ -117,15 +132,55 @@ fun NavigationGraph(
 
         composable("comunidade") {
             FeedScreen(
-                onRankingScreen = { navController.navigate("Ranking") }
+                onRankingScreen = {
+                    navController.navigate("Ranking")
+                },
+                onBuscarAmigosScreen = {
+                    navController.navigate("BuscarAmigos")
+                },
+                onCommentClick = { post ->
+                    navController.navigate("comentarios/${post.id}/${post.userId}")
+                }
+            )
+        }
+
+        composable(
+            route = "comentarios/{postId}/{remetenteId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+            val remetenteId = backStackEntry.arguments?.getString("remetenteId") ?: ""
+            ComentariosScreen(
+                postId = postId,
+                remetenteId = remetenteId,
+                onVoltar = { navController.popBackStack() }
             )
         }
 
         composable("Ranking") {
             RankingScreen(
-
-                onFeedScreen = { navController.popBackStack() }
+                onFeedScreen = { navController.popBackStack() },
+                onBuscarAmigosScreen = {
+                    navController.navigate("BuscarAmigos")
+                }
             )
+        }
+
+        composable("BuscarAmigos") {
+            BuscarAmigosScreen(
+                onPerfilUsuarioScreen = { idUsuario ->
+                    navController.navigate("PerfilUsuario/$idUsuario")
+                }
+            )
+        }
+
+        composable(route="PerfilUsuario/{idUsuario}") {  backStackEntry ->
+            val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
+            PerfilUsuarioScreen(
+                idUsuario = idUsuario,
+                onCommentClick = { post ->
+                    navController.navigate("comentarios/${post.id}")
+                })
         }
 
 

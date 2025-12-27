@@ -1,14 +1,34 @@
 package com.example.pegapista.ui.screens
 
+import android.Manifest
+import android.content.Context
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -17,24 +37,76 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.pegapista.R
+import com.example.pegapista.ui.components.SnapshotMap
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PostViewModel
+import java.io.File
+import com.example.pegapista.utils.MapUtils
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.JointType
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.RoundCap
+import com.google.maps.android.compose.*
 
+@OptIn(MapsComposeExperimentalApi::class)
 @Composable
 fun RunFinishedScreen(
     distancia: Double = 0.00,
     tempo: String = "0:00",
     pace: String = "-:--",
+    caminhoPercorrido: List<LatLng> = emptyList(),
     onFinishNavigation: () -> Unit = {},
     viewModel: PostViewModel = viewModel()
 ) {
+    // ESTADOS
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+
+    // FORMULARIO
     var titulo by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
+    var mostrarOpcoesFoto by remember { mutableStateOf(false) }
 
-    val uiState by viewModel.uiState.collectAsState()
+    // ESTADO DO MAPA (GOOGLE MAPS)
+    val cameraPositionState = rememberCameraPositionState()
+    var mapaAdicionado by remember { mutableStateOf(false) }
+
+    // DIALOGO PARA CONFIRMAR A EXCLUSAO DA ATIVIDADE
+    var showDiscardDialog by remember { mutableStateOf(false) }
+    BackHandler {
+        showDiscardDialog = true
+    }
+
+    // ARQUIVOS/IMAGENS
+    var uriTemporaria by remember { mutableStateOf<Uri?>(null) }
+    val listaFotos by viewModel.fotosSelecionadasUris.collectAsState()
+    val galeriaLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(5)
+    ) { uris ->
+        uris.forEach { viewModel.adicionarFoto(it) }
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { sucesso ->
+        if (sucesso && uriTemporaria != null) {
+            viewModel.adicionarFoto(uriTemporaria!!)
+        }
+    }
+
+    val permissaoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { aceitou ->
+        if (aceitou) {
+            uriTemporaria = criarUriParaPost(context)
+            cameraLauncher.launch(uriTemporaria!!)
+        } else {
+            Toast.makeText(context, "Permissão de câmera negada", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(uiState) {
         if (uiState.isSuccess) {
@@ -50,10 +122,33 @@ fun RunFinishedScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.primary)
-            .padding(20.dp),
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            IconButton(onClick = { showDiscardDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cancelar e Sair",
+                    tint = Color.White
+                )
+            }
+            Text(
+                text = "Nova Publicação",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
         Card(
             modifier = Modifier.fillMaxWidth().wrapContentHeight(),
             shape = RoundedCornerShape(16.dp),
@@ -64,12 +159,62 @@ fun RunFinishedScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(bottom = 20.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mapa_teste),
-                    contentDescription = "Mapa",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().height(200.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(4f / 4f)
+                        .clickable { mostrarOpcoesFoto = true }
+                ) {
+                        if (listaFotos.isNotEmpty()) {
+                            val pagerState = rememberPagerState(pageCount = { listaFotos.size })
+
+                            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                                AsyncImage(
+                                    model = listaFotos[page],
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            if (listaFotos.size > 1) {
+                                Row(
+                                    Modifier.align(Alignment.BottomCenter).padding(8.dp),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    repeat(listaFotos.size) { iteration ->
+                                        val color = if (pagerState.currentPage == iteration) Color.White else Color.White.copy(0.5f)
+                                        Box(modifier = Modifier.padding(2.dp).clip(CircleShape).background(color).size(6.dp))
+                                    }
+                                }
+                            }
+                        }
+
+                        // CENÁRIO 2: A lista está vazia (Mapa ainda não gerou) -> Mostra o Mapa para gerar a foto
+                        else if (caminhoPercorrido.isNotEmpty() && !mapaAdicionado) {
+                            SnapshotMap(
+                                caminhoPercorrido = caminhoPercorrido,
+                                context = context,
+                                onSnapshotPronto = { uri ->
+                                    viewModel.adicionarFoto(uri)
+                                    mapaAdicionado = true
+                                }
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(12.dp)
+                        ) {
+                            FloatingActionButton(
+                                onClick = { galeriaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                                containerColor = Color.Black.copy(alpha = 0.7f),
+                                contentColor = Color.White,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Add Fotos")
+                            }
+                        }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -112,12 +257,11 @@ fun RunFinishedScreen(
                         shape = RoundedCornerShape(8.dp),
                     )
                 }
-
-                // ... (Botão adicionar foto mantido)
             }
         }
 
         Spacer(modifier = Modifier.height(30.dp))
+
 
         Button(
             onClick = {
@@ -129,7 +273,7 @@ fun RunFinishedScreen(
                     pace = pace
                 )
             },
-            enabled = !uiState.isLoading, // Bloqueia se estiver carregando
+            enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth(0.8f).height(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
             shape = RoundedCornerShape(12.dp),
@@ -147,15 +291,71 @@ fun RunFinishedScreen(
             }
         }
     }
+
+    if (mostrarOpcoesFoto) {
+        AlertDialog(
+            onDismissRequest = { mostrarOpcoesFoto = false },
+            title = { Text("Adicionar Foto") },
+            text = { Text("Escolha uma foto para sua corrida:") },
+            confirmButton = {
+                TextButton(onClick = {
+                    mostrarOpcoesFoto = false
+                    galeriaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }) { Text("Galeria") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    mostrarOpcoesFoto = false
+                    permissaoLauncher.launch(Manifest.permission.CAMERA)
+                }) { Text("Câmera") }
+            }
+        )
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text("Sair sem postar?") },
+            text = { Text("Se você sair agora, essa corrida ficará salva no seu histórico, mas não será publicada no Feed.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onFinishNavigation()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                ) { Text("Sair") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) { Text("Continuar Editando") }
+            }
+        )
+    }
 }
 
-// StatItem permanece igual
+
 @Composable
 fun StatItem(valor: String, unidade: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = valor, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Black)
         Text(text = unidade, fontSize = 12.sp, color = Color.Gray)
     }
+}
+
+private fun criarUriParaPost(context: Context): Uri {
+    val arquivo = File.createTempFile(
+        "foto_corrida_",
+        ".jpg",
+        context.cacheDir
+    ).apply {
+        createNewFile()
+        deleteOnExit()
+    }
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.provider", // Deve bater com o Manifest
+        arquivo
+    )
 }
 
 @Preview(showBackground = true)

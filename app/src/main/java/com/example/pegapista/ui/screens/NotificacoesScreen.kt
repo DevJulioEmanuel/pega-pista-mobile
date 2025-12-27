@@ -1,96 +1,44 @@
 package com.example.pegapista.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.ModeComment
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pegapista.R
-import com.example.pegapista.ui.theme.PegaPistaTheme
-
-// Modelo de dados simples para a lista
-data class NotificacaoData(
-    val icon: ImageVector,
-    val titulo: String,
-    val descricao: String,
-    val tempo: String
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pegapista.data.models.Notificacao
+import com.example.pegapista.data.models.TipoNotificacao
+import com.example.pegapista.ui.viewmodels.NotificationsViewModel
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun NotificacoesScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: NotificationsViewModel = viewModel()
 ) {
-    // Dados mockados conforme a imagem
-    val listaNotificacoes = listOf(
-        NotificacaoData(
-            icon = Icons.Default.WaterDrop,
-            titulo = "Não perca sua chama!",
-            descricao = "Corra hoje para manter a sua sequência de 13 dias.",
-            tempo = "Há 5 min"
-        ),
-        NotificacaoData(
-            icon = Icons.Default.EmojiEvents,
-            titulo = "Ranking da Semana",
-            descricao = "Você subiu duas posições, veja sua classificação!",
-            tempo = "Há 15 min"
-        ),
-        NotificacaoData(
-            icon = Icons.Default.ThumbUp,
-            titulo = "Like",
-            descricao = "Marina Sena curtiu sua corrida",
-            tempo = "Há 20 min"
-        ),
-        NotificacaoData(
-            icon = Icons.Default.PersonAdd,
-            titulo = "Solicitação de Amizade",
-            descricao = "Carmen Miranda aceitou o seu pedido de amizade",
-            tempo = "Há 40 min"
-        ),
-        NotificacaoData(
-            icon = Icons.Default.Star,
-            titulo = "Parabéns!",
-            descricao = "Você correu 100km no total!",
-            tempo = "12 de mar"
-        )
-    )
+    val listaNotificacoes by viewModel.notificacoes.collectAsState()
 
-    // Coluna Principal
+    LaunchedEffect(Unit) {
+        viewModel.carregarNotificacoes()
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -99,10 +47,14 @@ fun NotificacoesScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
+        Text(
+            text = "Notificações",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 15.dp).align(Alignment.Start)
+        )
 
-  //      Spacer(modifier = Modifier.height(30.dp))
-
-        // Container Principal
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,13 +67,22 @@ fun NotificacoesScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Lista de Notificações
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(15.dp) // Espaço entre os itens
-            ) {
-                items(listaNotificacoes) { item ->
-                    NotificacaoItem(data = item)
+            if (listaNotificacoes.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Nenhuma notificação ainda.",
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+            } else {
+                // Lista Real
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    items(listaNotificacoes) { item ->
+                        NotificacaoItem(notificacao = item)
+                    }
                 }
             }
         }
@@ -129,14 +90,23 @@ fun NotificacoesScreen(
 }
 
 @Composable
-fun NotificacaoItem(data: NotificacaoData) {
+fun NotificacaoItem(notificacao: Notificacao) {
+    val (icon, tituloPadrao) = when (notificacao.tipo) {
+        TipoNotificacao.SEGUIR -> Pair(Icons.Default.PersonAdd, "Novo Seguidor")
+        TipoNotificacao.CURTIDA -> Pair(Icons.Default.ThumbUp, "Curtida")
+        TipoNotificacao.COMENTARIO -> Pair(Icons.Default.ModeComment, "Comentário")
+        else -> Pair(Icons.Default.Notifications, "Aviso")
+    }
+
+    val tempoRelativo = calcularTempoRelativo(notificacao.data)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(85.dp),
         shape = RoundedCornerShape(15.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (notificacao.lida) MaterialTheme.colorScheme.surface else Color(0xFFEDF7FF) // Leve destaque se não lida
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -146,37 +116,34 @@ fun NotificacaoItem(data: NotificacaoData) {
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ícone Circular
             Box(
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = data.icon,
+                    imageVector = icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
-
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Textos
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = data.titulo,
+                    text = tituloPadrao,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = data.descricao,
+                    text = notificacao.mensagem,
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
@@ -184,7 +151,6 @@ fun NotificacaoItem(data: NotificacaoData) {
                 )
             }
 
-            // Tempo/data
             Column(
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.End,
@@ -192,8 +158,8 @@ fun NotificacaoItem(data: NotificacaoData) {
             ) {
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = data.tempo,
-                    fontSize = 9.sp,
+                    text = tempoRelativo,
+                    fontSize = 10.sp,
                     color = Color.Gray
                 )
             }
@@ -201,10 +167,18 @@ fun NotificacaoItem(data: NotificacaoData) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun NotificacoesScreenPreview() {
-    PegaPistaTheme {
-        NotificacoesScreen()
+fun calcularTempoRelativo(timestamp: Long): String {
+    val agora = System.currentTimeMillis()
+    val diff = agora - timestamp
+
+    return when {
+        diff < TimeUnit.MINUTES.toMillis(1) -> "Agora"
+        diff < TimeUnit.HOURS.toMillis(1) -> "Há ${TimeUnit.MILLISECONDS.toMinutes(diff)} min"
+        diff < TimeUnit.DAYS.toMillis(1) -> "Há ${TimeUnit.MILLISECONDS.toHours(diff)} h"
+        diff < TimeUnit.DAYS.toMillis(7) -> "Há ${TimeUnit.MILLISECONDS.toDays(diff)} dias"
+        else -> {
+            val sdf = java.text.SimpleDateFormat("dd/MM", java.util.Locale.getDefault())
+            sdf.format(java.util.Date(timestamp))
+        }
     }
 }
