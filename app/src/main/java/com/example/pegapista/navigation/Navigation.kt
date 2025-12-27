@@ -78,6 +78,7 @@ fun NavigationGraph(
 
         composable("Home") {
             HomeScreen(
+                usuario = usuarioAtual,
                 onIniciarCorrida = { navController.navigate("AtividadeBefore") }
             )
         }
