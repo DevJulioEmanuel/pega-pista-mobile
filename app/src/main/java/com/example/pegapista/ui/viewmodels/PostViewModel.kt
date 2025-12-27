@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Corrida
+import com.example.pegapista.data.models.Notificacao
 import com.example.pegapista.data.models.Postagem
+import com.example.pegapista.data.models.TipoNotificacao
+import com.example.pegapista.data.repository.NotificationRepository
 import com.example.pegapista.data.repository.PostRepository
 import com.example.pegapista.data.repository.UserRepository
 import com.google.firebase.Firebase
@@ -33,6 +36,7 @@ data class PostUiState(
 class PostViewModel : ViewModel() {
     private val repository = PostRepository()
     private val userRepository = UserRepository()
+    private val notificationRepository = NotificationRepository()
     private val _uiState = MutableStateFlow(PostUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -166,7 +170,7 @@ class PostViewModel : ViewModel() {
         viewModelScope.launch {
             val meuId = auth.currentUser?.uid ?: return@launch
             val jaCurtiu = post.curtidas.contains(meuId)
-
+            val userAtual = userRepository.getUsuarioAtual()
             val sucesso = repository.toggleCurtida(post.id, meuId, jaCurtiu)
 
             if (sucesso) {
@@ -180,13 +184,27 @@ class PostViewModel : ViewModel() {
                     }
                 }
                 _feedState.value = novaListaFeed
+                val novaNotificacao = Notificacao(
+                    destinatarioId = post.userId,
+                    remetenteId = meuId,
+                    remetenteNome = userAtual.nickname,
+                    tipo = TipoNotificacao.CURTIDA,
+                    mensagem = "${userAtual.nickname} curtiu a sua corrida!",
+                    data = System.currentTimeMillis()
+                )
+                launch {
+                    try {
+                        notificationRepository.criarNotificacao(novaNotificacao)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
             }
         }
     }
 
-    fun enviarComentario(postId: String, texto: String) {
+    fun enviarComentario(postId: String, remetenteId: String, texto: String) {
         if (texto.isBlank()) return
-
         viewModelScope.launch {
             val usuario = userRepository.getUsuarioAtual()
             val novoComentario = Comentario(
@@ -196,6 +214,21 @@ class PostViewModel : ViewModel() {
                 data = System.currentTimeMillis()
             )
             val sucesso = repository.enviarComentario(postId, novoComentario)
+            val novaNotificacao = Notificacao(
+                destinatarioId = remetenteId,
+                remetenteId = meuId,
+                remetenteNome = usuario.nickname,
+                tipo = TipoNotificacao.COMENTARIO,
+                mensagem = "${usuario.nickname} comentou na sua corrida!.",
+                data = System.currentTimeMillis()
+            )
+            launch {
+                try {
+                    notificationRepository.criarNotificacao(novaNotificacao)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
             if (sucesso) {
                 carregarComentarios(postId)
             }

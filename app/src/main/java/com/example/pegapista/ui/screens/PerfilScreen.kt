@@ -249,7 +249,7 @@ fun MetadadosPerfil(user: Usuario) {
             fontWeight = FontWeight.ExtraBold,
             color = Color.White
         )
-        Spacer(Modifier.height(45.dp))
+        Spacer(Modifier.height(15.dp))
         Box(
             modifier = Modifier
                 .padding(horizontal = 35.dp)

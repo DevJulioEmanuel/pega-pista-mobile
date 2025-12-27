@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import com.example.pegapista.R
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -102,7 +103,7 @@ fun AtividadeAfterScreen(
                         viewModel.finalizarCorrida()
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
-                ) { Text("Cancelar") }
+                ) { Text("Parar Corrida") }
             },
             dismissButton = {
                 TextButton(onClick = { showDiscardDialog = false }) { Text("Continuar Corrida") }
@@ -142,34 +143,15 @@ fun AtividadeAfterScreen(
             onFinishActivity(distanciaKm, tempoFormatado, paceAtual, percurso)
         }
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .verticalScroll(scrollState)
+
+            .background(MaterialTheme.colorScheme.primary),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-
-
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(scrollState)
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-
-
                 Text(
                     text = "Live",
                     color = Color.White,
@@ -217,8 +199,8 @@ fun AtividadeAfterScreen(
                 }
             }
         }
-    }
-}
+
+
 
 @Composable
 fun BlocoDados(valor: String, label: String) {

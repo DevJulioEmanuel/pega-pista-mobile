@@ -1,5 +1,7 @@
 package com.example.pegapista.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -26,6 +28,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
@@ -136,19 +139,20 @@ fun NavigationGraph(
                     navController.navigate("BuscarAmigos")
                 },
                 onCommentClick = { post ->
-                    navController.navigate("comentarios/${post.id}")
+                    navController.navigate("comentarios/${post.id}/${post.userId}")
                 }
             )
         }
 
         composable(
-            route = "comentarios/{postId}",
+            route = "comentarios/{postId}/{remetenteId}",
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getString("postId") ?: ""
-
+            val remetenteId = backStackEntry.arguments?.getString("remetenteId") ?: ""
             ComentariosScreen(
                 postId = postId,
+                remetenteId = remetenteId,
                 onVoltar = { navController.popBackStack() }
             )
         }
@@ -172,7 +176,11 @@ fun NavigationGraph(
 
         composable(route="PerfilUsuario/{idUsuario}") {  backStackEntry ->
             val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
-            PerfilUsuarioScreen(idUsuario = idUsuario)
+            PerfilUsuarioScreen(
+                idUsuario = idUsuario,
+                onCommentClick = { post ->
+                    navController.navigate("comentarios/${post.id}")
+                })
         }
 
 

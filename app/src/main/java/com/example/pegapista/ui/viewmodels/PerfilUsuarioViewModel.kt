@@ -2,8 +2,11 @@ package com.example.pegapista.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pegapista.data.models.Notificacao
 import com.example.pegapista.data.models.Postagem
+import com.example.pegapista.data.models.TipoNotificacao
 import com.example.pegapista.data.models.Usuario
+import com.example.pegapista.data.repository.NotificationRepository
 import com.example.pegapista.data.repository.PostRepository
 import com.example.pegapista.data.repository.UserRepository
 import kotlinx.coroutines.async
@@ -15,6 +18,7 @@ class PerfilUsuarioViewModel: ViewModel() {
 
     private val repository = UserRepository()
     private val postRepository = PostRepository()
+    private val notificationRepository = NotificationRepository()
     private val _userState = MutableStateFlow(Usuario(nickname = "Carregando..."))
     val userState = _userState.asStateFlow()
 
@@ -52,16 +56,51 @@ class PerfilUsuarioViewModel: ViewModel() {
 
 
     fun toggleSeguir() {
-        val idAmigo = _userState.value.id
-        if (idAmigo.isBlank()) return
+        val userAlvo = _userState.value
+        if (userAlvo.id.isBlank()) return
         viewModelScope.launch {
+            val userAtual = repository.getUsuarioAtual()
             val jaSegue = _isSeguindo.value
             _isSeguindo.value = !jaSegue
             if (jaSegue) {
-                repository.deixarDeSeguirUsuario(idAmigo)
+                repository.deixarDeSeguirUsuario(userAlvo.id)
             } else {
-                repository.seguirUsuario(idAmigo)
+                repository.seguirUsuario(userAlvo.id)
+                val novaNotificacao = Notificacao(
+                    destinatarioId = userAlvo.id,
+                    remetenteId = userAtual.id,
+                    remetenteNome = userAtual.nickname,
+                    tipo = TipoNotificacao.SEGUIR,
+                    mensagem = "${userAtual.nickname} começou a seguir você!.",
+                    data = System.currentTimeMillis()
+                )
+                launch {
+                    try {
+                        notificationRepository.criarNotificacao(novaNotificacao)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
             }
+        }
+    }
+
+    fun atualizarLikeNoPostLocal(postId: String, userIdLogado: String) {
+        val listaAtual = _postsUsuario.value.toMutableList()
+        val index = listaAtual.indexOfFirst { it.id == postId }
+
+        if (index != -1) {
+            val postAntigo = listaAtual[index]
+            val novasCurtidas = postAntigo.curtidas.toMutableList()
+
+            if (novasCurtidas.contains(userIdLogado)) {
+                novasCurtidas.remove(userIdLogado)
+            } else {
+                novasCurtidas.add(userIdLogado)
+            }
+            val postNovo = postAntigo.copy(curtidas = novasCurtidas)
+            listaAtual[index] = postNovo
+            _postsUsuario.value = listaAtual
         }
     }
 

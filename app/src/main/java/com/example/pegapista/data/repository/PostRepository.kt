@@ -21,7 +21,6 @@ class PostRepository {
     suspend fun criarPost(post: Postagem): Result<Boolean> {
         return try {
             val user = auth.currentUser ?: throw Exception("Usuário não logado")
-
             val postSalvo = post.copy(userId = user.uid)
 
             db.collection("posts")
