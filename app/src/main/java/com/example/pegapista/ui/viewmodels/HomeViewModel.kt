@@ -15,6 +15,9 @@ class HomeViewModel : ViewModel() {
     private val _usuario = MutableStateFlow<Usuario?>(null)
     val usuario: StateFlow<Usuario?> = _usuario
 
+    private val _ranking = MutableStateFlow<List<Usuario>>(emptyList())
+    val ranking: StateFlow<List<Usuario>> = _ranking
+
     init {
         carregarDadosUsuario()
     }
@@ -24,6 +27,7 @@ class HomeViewModel : ViewModel() {
             try {
                 val user = userRepository.getUsuarioAtual()
                 _usuario.value = user
+                _ranking.value = userRepository.getRankingSeguindo()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
