@@ -25,6 +25,10 @@ import com.example.pegapista.ui.screens.RankingScreen
 import com.example.pegapista.ui.screens.RunFinishedScreen
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pegapista.ui.viewmodels.HomeViewModel
 
 
 
@@ -77,8 +81,10 @@ fun NavigationGraph(
 
 
         composable("Home") {
+            val homeViewModel: HomeViewModel = viewModel()
+            val usuario by homeViewModel.usuario.collectAsState()
             HomeScreen(
-                usuario = usuarioAtual,
+                usuario = usuario,
                 onIniciarCorrida = { navController.navigate("AtividadeBefore") }
             )
         }

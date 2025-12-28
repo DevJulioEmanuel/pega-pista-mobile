@@ -25,7 +25,6 @@ class HomeViewModel : ViewModel() {
                 val user = userRepository.getUsuarioAtual()
                 _usuario.value = user
             } catch (e: Exception) {
-                // Tratar erro ou logar
                 e.printStackTrace()
             }
         }

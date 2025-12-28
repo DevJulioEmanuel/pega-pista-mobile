@@ -188,4 +188,27 @@ class UserRepository {
         }
     }
 
+    suspend fun getRankingSeguindo(): List<Usuario> {
+        return try {
+            val idsSeguindo = getIdsSeguindo()
+            val meuId = auth.currentUser?.uid ?: return emptyList()
+
+            val todosIds = idsSeguindo.toMutableList().apply { add(meuId) }
+
+            if (todosIds.isEmpty()) return emptyList()
+
+            // Se tiver mais que 10 amigos, precisará fazer múltiplas consultas ou mudar a lógica.
+            val snapshot = usersRef
+                .whereIn("id", todosIds)
+                .get()
+                .await()
+
+            snapshot.toObjects(Usuario::class.java)
+                .sortedByDescending { it.diasSeguidos } // Ordena pelo foguinho
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+
 }
