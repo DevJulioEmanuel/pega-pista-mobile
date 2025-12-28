@@ -83,8 +83,10 @@ fun NavigationGraph(
         composable("Home") {
             val homeViewModel: HomeViewModel = viewModel()
             val usuario by homeViewModel.usuario.collectAsState()
+            val ranking by homeViewModel.ranking.collectAsState()
             HomeScreen(
                 usuario = usuario,
+                ranking = ranking,
                 onIniciarCorrida = { navController.navigate("AtividadeBefore") }
             )
         }

@@ -71,9 +71,12 @@ import com.example.pegapista.data.models.Usuario
 @Composable
 fun HomeScreen(
     usuario: Usuario?,
+    ranking: List<Usuario> = emptyList(),
     onIniciarCorrida: () -> Unit
 ) {
     val dias = usuario?.diasSeguidos ?: 0
+    val meuId = usuario?.id ?: ""
+    val minhaPosicao = ranking.indexOfFirst { it.id == meuId }.let { if (it == -1) "--" else "${it + 1}º" }
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
@@ -168,8 +171,8 @@ fun HomeScreen(
                     ) {
 
                         Text(
-                            text = "5º",
-                            fontSize = 70.sp, // Bem grande!
+                            text = minhaPosicao,
+                            fontSize = 70.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -201,23 +204,25 @@ fun HomeScreen(
                     ) {
 
                         // --- LADO DIREITO: RANKING ---
-                       
-                            Text(
-                                text = "Ranking dos Amigos 🏆",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
+
+                        Text(
+                            text = "Ranking dos Amigos 🏆",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
+                        )
+
+                        ranking.take(2).forEachIndexed { index, user ->
+                            ItemRankingHome(
+                                posicao = "${index + 1}º",
+                                nome = user.nickname,
+                                largura = if (index == 0) 1f else 0.8f
                             )
-
-                            // BARRA 1: Marina (A mais larga - 100% do espaço da coluna)
-                            ItemRanking(posicao = "01º", nome = "Marina Sena", largura = 1f)
-
-                            // BARRA 2: Claudio (Um pouco menor - 85% do espaço)
-                            ItemRanking(posicao = "02º", nome = "Claudio Leite", largura = 0.85f)
 
                         }
                     }
+                }
                 // --- ESPAÇO DEPOIS DO RANKING ---
                 Spacer(modifier = Modifier.height(35.dp))
 
@@ -310,7 +315,7 @@ fun ItemAtividade(nome: String, info: String) {
     }
 }
 @Composable
-fun ItemRanking(posicao: String, nome: String, largura: Float) {
+fun ItemRankingHome(posicao: String, nome: String, largura: Float) {
     Surface(
         
         color = Color(0xFF0288D1),
