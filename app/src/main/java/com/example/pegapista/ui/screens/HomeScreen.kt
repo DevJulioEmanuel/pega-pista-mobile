@@ -66,6 +66,7 @@ import com.example.pegapista.ui.theme.BackgroundLight
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import kotlin.math.sin
+import com.example.pegapista.data.models.Usuario
 
 @Composable
 fun HomeScreen(
@@ -356,6 +357,6 @@ fun ItemRanking(posicao: String, nome: String, largura: Float) {
 @Composable
 fun HomeScreenPreview() {
     PegaPistaTheme {
-        HomeScreen(onIniciarCorrida = {})
+        HomeScreen(usuario = null, onIniciarCorrida = {})
     }
 }
