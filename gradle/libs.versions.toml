@@ -17,6 +17,7 @@ firebaseCommonKtx = "22.0.1"
 foundation = "1.10.0"
 runtimeLivedata = "1.10.0"
 cameraCore = "1.5.2"
+roomCommonJvm = "2.8.4"
 
 
 
@@ -44,6 +45,7 @@ firebase-common-ktx = { group = "com.google.firebase", name = "firebase-common-k
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
 androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
+androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
 
 
 
