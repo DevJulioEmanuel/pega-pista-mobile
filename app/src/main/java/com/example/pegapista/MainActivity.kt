@@ -18,9 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.pegapista.di.storageModule
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.utils.CHANNEL_ID
 import com.example.pegapista.worker.LembreteWorker
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext.startKoin
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {

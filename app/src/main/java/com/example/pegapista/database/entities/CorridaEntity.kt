@@ -1,11 +1,11 @@
-package com.example.pegapista.data.models
+package com.example.pegapista.database.entities
 
+import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.firebase.Timestamp
-import java.util.Date
 
-data class Corrida(
-    @PrimaryKey val id: String = "",
+@Entity(tableName = "corridas")data class CorridaEntity(
+    @PrimaryKey
+    val id: String = "",
     val userId: String = "",
     val distanciaKm: Double = 0.0,
     val tempo: String = "",
