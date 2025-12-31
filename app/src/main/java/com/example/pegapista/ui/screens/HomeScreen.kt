@@ -1,5 +1,6 @@
 package com.example.pegapista.ui.screens
 
+import android.widget.Toast
 import com.example.pegapista.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -47,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -62,27 +64,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.pegapista.ui.theme.BackgroundLight
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import kotlin.math.sin
+
 
 @Composable
 fun HomeScreen(
     onIniciarCorrida: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//        Image(
-//            painter = painterResource(R.drawable.logo_aplicativo),
-//            contentDescription = "Logo do aplicativo",
-//            modifier = Modifier.size(80.dp)
-//        )
+
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
@@ -101,7 +105,7 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
                     // Lado Esquerdo (Fogo)
                     Image(
                         painter = painterResource(R.drawable.logo_fogo),
@@ -120,7 +124,8 @@ fun HomeScreen(
                         Surface(
                             shape = RoundedCornerShape(30),
                             color = Color.White,
-                            modifier = Modifier.offset(y = 10.dp).zIndex(1f) //deixar um por cima do oto
+                            modifier = Modifier.offset(y = 10.dp)
+                                .zIndex(1f) //deixar um por cima do oto
                         ) {
                             Text(
                                 text = "Sequência de 13 dias consecutivos",
@@ -198,23 +203,23 @@ fun HomeScreen(
                     ) {
 
                         // --- LADO DIREITO: RANKING ---
-                       
-                            Text(
-                                text = "Ranking dos Amigos 🏆",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
-                            )
 
-                            // BARRA 1: Marina (A mais larga - 100% do espaço da coluna)
-                            ItemRanking(posicao = "01º", nome = "Marina Sena", largura = 1f)
+                        Text(
+                            text = "Ranking dos Amigos 🏆",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
+                        )
 
-                            // BARRA 2: Claudio (Um pouco menor - 85% do espaço)
-                            ItemRanking(posicao = "02º", nome = "Claudio Leite", largura = 0.85f)
+                        // BARRA 1: Marina (A mais larga - 100% do espaço da coluna)
+                        ItemRanking(posicao = "01º", nome = "Marina Sena", largura = 1f)
 
-                        }
+                        // BARRA 2: Claudio (Um pouco menor - 85% do espaço)
+                        ItemRanking(posicao = "02º", nome = "Claudio Leite", largura = 0.85f)
+
                     }
+                }
                 // --- ESPAÇO DEPOIS DO RANKING ---
                 Spacer(modifier = Modifier.height(35.dp))
 
@@ -230,13 +235,13 @@ fun HomeScreen(
                     textAlign = TextAlign.Center
                 )
 
-                    // --- LISTA DE ATIVIDADES (Usando o componente que criamos) ---
+                // --- LISTA DE ATIVIDADES (Usando o componente que criamos) ---
                 ItemAtividade("Marina Sena", "5.0 km em 25:00 min")
                 ItemAtividade("Claudia Leite", "6.5 km em 32:40 min")
                 ItemAtividade("Molodoy", "10.5 km em 33:40 min")
 
 
-        // Este Spacer é mágico: ele ocupa TODO o espaço vazio que sobrar, empurrando o botão lá para baixo
+                // Este Spacer é mágico: ele ocupa TODO o espaço vazio que sobrar, empurrando o botão lá para baixo
                 Spacer(modifier = Modifier.weight(1f))
 
                 Spacer(modifier = Modifier.height(22.dp))
@@ -258,12 +263,10 @@ fun HomeScreen(
                         color = Color.White
                     )
                 }
-                }
-
-                }
             }
-
         }
+    }
+}
 
 
 @Composable
