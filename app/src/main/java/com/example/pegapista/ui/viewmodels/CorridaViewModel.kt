@@ -29,14 +29,24 @@ data class SaveRunState(
 
 class CorridaViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = CorridaRepository()
+    private val repository = CorridaRepository(application.applicationContext)
+    private val locationManager = LocationManager(application)
+
+    private val _distancia = MutableLiveData(0f)
+    val distancia: LiveData<Float> = _distancia
+
+    private val _tempoSegundos = MutableLiveData(0L)
+    val tempoSegundos: LiveData<Long> = _tempoSegundos
+
+    private val _pace = MutableLiveData("-:--") // Começa com traço
+    val pace: LiveData<String> = _pace
+
+    private val _isRastreando = MutableLiveData(false)
+    val isRastreando: LiveData<Boolean> = _isRastreando
+
     private val _saveState = MutableStateFlow(SaveRunState())
     val saveState = _saveState.asStateFlow()
 
-    val distancia = RunningState.distanciaMetros
-    val tempoSegundos = RunningState.tempoSegundos
-    val pace = RunningState.pace
-    val isRastreando = RunningState.isRastreando
     val percurso = RunningState.percurso
 
 
@@ -61,6 +71,7 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
         intent.action = "START"
         getApplication<Application>().startForegroundService(intent)
     }
+
 
     fun finalizarESalvarCorrida() {
         val intent = Intent(getApplication(), RunningService::class.java)
