@@ -5,7 +5,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.pegapista.utils.showNotification
 
-class NotificacaoWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+class LembreteWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
         val mensagens = listOf(
