@@ -1,5 +1,6 @@
 package com.example.pegapista.ui.viewmodels
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Intent
 import android.location.Location
@@ -14,12 +15,15 @@ import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.data.repository.CorridaRepository
 import com.example.pegapista.service.RunningService
 import com.example.pegapista.service.RunningState
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class SaveRunState(
     val isLoading: Boolean = false,
@@ -39,6 +43,13 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
     val isRastreando = RunningState.isRastreando
     val percurso = RunningState.percurso
 
+    //Para a camera
+    private val _localizacaoInicial = MutableStateFlow<LatLng?>(null)
+    val localizacaoInicial: StateFlow<LatLng?> = _localizacaoInicial
+
+    init {
+        buscarUltimaLocalizacao()
+    }
 
     fun toggleRastreamento() {
         val intent = Intent(getApplication(), RunningService::class.java)
@@ -101,6 +112,23 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
         val segs = segundos % 60
         return if (horas > 0) "%d:%02d:%02d".format(horas, minutos, segs)
         else "%02d:%02d".format(minutos, segs)
+    }
+
+    @SuppressLint("MissingPermission") // Assumimos que a MainActivity já pediu permissão
+    fun buscarUltimaLocalizacao() {
+        val context = getApplication<Application>().applicationContext
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+        viewModelScope.launch {
+            try {
+                val location = fusedLocationClient.lastLocation.await()
+                if (location != null) {
+                    _localizacaoInicial.value = LatLng(location.latitude, location.longitude)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
 }

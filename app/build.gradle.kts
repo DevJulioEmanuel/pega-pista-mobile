@@ -70,6 +70,7 @@ dependencies {
     // Implementação de login e senha
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-messaging:23.4.1")
 
     // 3. ADICIONA isto para garantir que o Firebase inicializa (opcional, mas recomendado):
     implementation("com.google.firebase:firebase-analytics")
@@ -79,9 +80,11 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.animation)
 
 
     // --- Testes ---
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
