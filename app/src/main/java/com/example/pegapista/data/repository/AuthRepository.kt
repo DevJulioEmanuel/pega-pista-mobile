@@ -9,6 +9,10 @@ import kotlinx.coroutines.tasks.await
 class AuthRepository {
 
     private val auth = FirebaseAuth.getInstance()
+
+    fun signOut() {
+        auth.signOut()
+    }
     private val db = FirebaseFirestore.getInstance()
 
     // Função de Login

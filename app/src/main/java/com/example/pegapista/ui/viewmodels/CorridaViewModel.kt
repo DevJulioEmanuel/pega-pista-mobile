@@ -22,8 +22,7 @@ data class SaveRunState(
 )
 
 class CorridaViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = CorridaRepository()
+    private val repository = CorridaRepository(application.applicationContext)
     private val locationManager = LocationManager(application)
 
     private val _distancia = MutableLiveData(0f)

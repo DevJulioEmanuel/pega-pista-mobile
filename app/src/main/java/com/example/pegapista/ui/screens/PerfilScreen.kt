@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
@@ -43,10 +46,13 @@ import com.example.pegapista.ui.viewmodels.PerfilViewModel
 import java.io.File
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun PerfilScreen(
+    navController: NavHostController,
     modifier: Modifier = Modifier.background(Color.White),
     viewModel: PerfilViewModel = viewModel()
 ) {
+
     val usuario by viewModel.userState.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -63,7 +69,31 @@ fun PerfilScreen(
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(35.dp))
+
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = {
+
+                viewModel.deslogar()
+
+                navController.navigate("login") {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "Sair",
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+        }
 
         TopPerfil(usuario, viewModel)
 
@@ -109,7 +139,7 @@ fun TopPerfil(
     }
 
     Column(
-        modifier = Modifier.padding(top = 15.dp),
+        modifier = Modifier.padding(top = 10.dp), // Ajustei levemente o top padding
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(contentAlignment = Alignment.BottomEnd) {
@@ -323,6 +353,8 @@ private fun criarUriParaFoto(context: Context): Uri {
 @Composable
 fun PerfilScreenPreview() {
     PegaPistaTheme {
-        PerfilScreen()
+        // Mock do NavController para o Preview não quebrar
+        val navController = rememberNavController()
+        PerfilScreen(navController = navController)
     }
 }

@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.work.runtime.ktx)
     //Banco de Dados ROOM
     val room_version = "2.8.4"
 
