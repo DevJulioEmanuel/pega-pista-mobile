@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pegapista.data.models.Usuario
+import com.example.pegapista.data.repository.AuthRepository
 import com.example.pegapista.data.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -14,7 +15,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
-class PerfilViewModel : ViewModel() {
+class PerfilViewModel(
+    private val authRepository: AuthRepository = AuthRepository()
+) : ViewModel() {
 
     private val repository = UserRepository()
 
@@ -28,6 +31,9 @@ class PerfilViewModel : ViewModel() {
         carregarPerfil()
     }
 
+    fun deslogar() {
+        authRepository.signOut()
+    }
     fun carregarPerfil() {
         viewModelScope.launch {
             try {
