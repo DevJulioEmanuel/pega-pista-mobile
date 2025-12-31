@@ -131,7 +131,7 @@ fun AtividadeAfterScreen(
     }
 
     LaunchedEffect(saveState) {
-        if (saveState.isSuccess) {
+        if (saveState?.isSuccess == true) {
             val distanciaKm = (distanciaMetros / 1000).toDouble()
             val tempoFormatado = viewModel.formatarTempoParaString(tempoSegundos)
             onFinishActivity(distanciaKm, tempoFormatado, paceAtual, percurso)
