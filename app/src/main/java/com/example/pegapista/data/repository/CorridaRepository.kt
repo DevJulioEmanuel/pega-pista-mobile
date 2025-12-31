@@ -21,6 +21,8 @@ class CorridaRepository {
                 .set(corridaSalva)
                 .await()
 
+            UserRepository().atualizarSequenciaDiaria()
+
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)

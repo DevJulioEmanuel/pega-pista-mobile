@@ -20,11 +20,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.utils.CHANNEL_ID
-import com.example.pegapista.utils.showNotification
 import com.example.pegapista.worker.LembreteWorker
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentChange
-import com.google.firebase.firestore.FirebaseFirestore
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -89,7 +85,7 @@ class MainActivity : ComponentActivity() {
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "WorkNotificacaoDiaria",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.REPLACE,
             lembreteRequest
         )
     }
