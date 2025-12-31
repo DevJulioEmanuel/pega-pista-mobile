@@ -185,7 +185,7 @@ fun NavigationGraph(
 
 
         composable("perfil") {
-            PerfilScreen()
+            PerfilScreen(navController)
         }
 
         composable("notificacoes") {
