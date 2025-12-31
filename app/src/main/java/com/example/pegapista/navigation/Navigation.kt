@@ -196,7 +196,14 @@ fun NavigationGraph(
 
 
         composable("perfil") {
-            PerfilScreen()
+            PerfilScreen(
+                onDeslogar = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable("notificacoes") {

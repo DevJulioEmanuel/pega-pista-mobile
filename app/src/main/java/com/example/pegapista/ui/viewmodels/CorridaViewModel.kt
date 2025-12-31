@@ -6,6 +6,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.retain.LocalRetainedValuesStoreProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,6 +25,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 data class SaveRunState(
     val isLoading: Boolean = false,
@@ -31,9 +34,10 @@ data class SaveRunState(
     val error: String? = null
 )
 
-class CorridaViewModel(application: Application) : AndroidViewModel(application) {
+class CorridaViewModel(application: Application) : AndroidViewModel(application), KoinComponent {
 
-    private val repository = CorridaRepository()
+    private val repository: CorridaRepository by inject()
+
     private val _saveState = MutableStateFlow(SaveRunState())
     val saveState = _saveState.asStateFlow()
 
@@ -130,5 +134,4 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
-
 }
