@@ -1,10 +1,11 @@
 package com.example.pegapista.ui.screens
 
 import android.Manifest
-import android.net.http.SslCertificate.saveState
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,12 +69,13 @@ fun AtividadeAfterScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
+
+    val saveState by viewModel.saveState.collectAsState(initial = null)
     val percurso by viewModel.percurso.collectAsState()
     val distanciaMetros by viewModel.distancia.collectAsState()
     val tempoSegundos by viewModel.tempoSegundos.collectAsState()
     val paceAtual by viewModel.pace.collectAsState()
     val isRastreando by viewModel.isRastreando.collectAsState()
-    val saveState by viewModel.saveState.collectAsState()
     val distanciaKmExibicao = "%.2f".format(distanciaMetros / 1000)
 
     val tempoExibicao = remember(tempoSegundos) {
