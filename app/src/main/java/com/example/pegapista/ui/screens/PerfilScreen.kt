@@ -12,6 +12,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,61 +41,111 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
 import com.example.pegapista.ui.viewmodels.PerfilViewModel
+import com.example.pegapista.ui.viewmodels.PostViewModel
 import java.io.File
+import androidx.compose.runtime.collectAsState
+import com.example.pegapista.data.models.Postagem
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun PerfilScreen(
     onDeslogar: () -> Unit,
     modifier: Modifier = Modifier.background(Color.White),
-    viewModel: PerfilViewModel = viewModel()
+    onCommentClick: (Postagem, String) -> Unit,
+    viewModel: PerfilViewModel = viewModel(),
+    perfilviewModel: PerfilUsuarioViewModel = viewModel(),
+    postsviewModel: PostViewModel = viewModel()
 ) {
 
     val usuario by viewModel.userState.collectAsState()
+    val meuId = usuario.id
     val scrollState = rememberScrollState()
+    val posts = perfilviewModel.postsUsuario.collectAsState().value
 
-    LaunchedEffect(Unit) {
-        viewModel.carregarPerfil()
+    LaunchedEffect(meuId) {
+        if (meuId != null) {
+            perfilviewModel.carregarPerfilUsuario(meuId)
+        }
     }
 
-    Column(
-        modifier = modifier
+    LazyColumn(
+        modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
-            .padding(20.dp)
-            .clip(RoundedCornerShape(5.dp))
-            .verticalScroll(scrollState),
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            IconButton(onClick = {
-                viewModel.deslogar()
-                onDeslogar()
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = "Sair",
-                    tint = Color.White,
-                    modifier = Modifier.size(30.dp)
-                )
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = {
+                    viewModel.deslogar()
+                    onDeslogar()
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Sair",
+                        tint = Color.White
+                    )
+                }
             }
         }
 
-        TopPerfil(usuario, viewModel)
+        item {
+            TopPerfil(usuario, viewModel)
+            Spacer(Modifier.height(5.dp))
+            MetadadosPerfil(usuario)
+            Spacer(Modifier.height(20.dp))
+        }
 
-        Spacer(modifier = Modifier.height(5.dp))
-        MetadadosPerfil(usuario)
-        Spacer(Modifier.height(20.dp))
+        if (posts.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Atividades Recentes",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            items(posts) { post ->
+                Box(modifier = Modifier.padding(vertical = 8.dp)) {
+                    PostCard(
+                        post = post,
+                        data = postsviewModel.formatarDataHora(post.data),
+                        currentUserId = usuario.id,
+                        onLikeClick = {
+                            postsviewModel.toggleCurtidaPost(post)
+                            perfilviewModel.atualizarLikeNoPostLocal(post.id, usuario.id ?: "")
+                        },
+                        onCommentClick = {
+                            onCommentClick(post, usuario.id)
+                        },
+                        onProfileClick = {}
+                    )
+                }
+            }
+        } else {
+            item {
+                Text(
+                    text = "Nenhuma atividade ainda.",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 14.sp
+                )
+            }
+        }
     }
+
 }
 
 @Composable
@@ -109,14 +161,14 @@ fun TopPerfil(
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        if (uri != null) viewModel.atualizarFotoPerfil(uri)
+        if (uri != null) viewModel.atualizarFotoPerfil(uri, context)
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { sucesso ->
         if (sucesso && uriTemporaria != null) {
-            viewModel.atualizarFotoPerfil(uriTemporaria!!)
+            viewModel.atualizarFotoPerfil(uriTemporaria!!, context)
         }
     }
 
@@ -139,15 +191,21 @@ fun TopPerfil(
             val foto = user.fotoPerfilUrl
             if (!foto.isNullOrEmpty()) {
                 AsyncImage(
-                    model = foto,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(foto)
+                        .crossfade(true)
+                        .crossfade(500)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .build(),
                     contentDescription = "Foto do usuário",
                     modifier = Modifier
                         .size(125.dp)
                         .clip(CircleShape)
                         .border(5.dp, Color.White, CircleShape),
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.jaco),
-                    error = painterResource(R.drawable.jaco)
+                    placeholder = painterResource(R.drawable.perfil_padrao),
+                    error = painterResource(R.drawable.perfil_padrao)
                 )
             } else {
                 Image(
@@ -268,7 +326,11 @@ fun MetadadosPerfil(user: Usuario) {
         }
         Spacer(Modifier.height(10.dp))
         Text(
-            text = "${user.diasSeguidos} dias!",
+            text = if (user.diasSeguidos>1) {
+                "${user.diasSeguidos} dias!"}
+            else {
+                "${user.diasSeguidos} dia!"
+            },
             fontSize = 20.sp,
             fontWeight = FontWeight.ExtraBold,
             color = Color.White
@@ -297,7 +359,11 @@ fun MetadadosPerfil(user: Usuario) {
             .clip(RoundedCornerShape(10.dp))
         ) {
             Text(
-                text = "Seu recorde foi de ${user.recordeDiasSeguidos} dias seguidos!",
+                text = if (user.recordeDiasSeguidos>1) {
+                    "Seu recorde foi de ${user.recordeDiasSeguidos} dias seguidos!"}
+                else {
+                    "Seu recorde foi de ${user.recordeDiasSeguidos} dia seguidos!"
+                },
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
                 modifier = Modifier
@@ -390,6 +456,6 @@ private fun criarUriParaFoto(context: Context): Uri {
 @Composable
 fun PerfilScreenPreview() {
     PegaPistaTheme {
-        PerfilScreen(onDeslogar = {})
+        //PerfilScreen(onDeslogar = {})
     }
 }

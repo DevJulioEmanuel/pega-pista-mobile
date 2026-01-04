@@ -22,4 +22,5 @@ class RankingViewModel : ViewModel() {
             _ranking.value = repository.getRankingSeguindo()
         }
     }
+
 }

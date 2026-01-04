@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.R
+import com.example.pegapista.ui.screens.BotaoGoogle
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.AuthViewModel
@@ -142,6 +143,22 @@ fun CadastroScreen(
             ButtonCadastrar(
                 onClick = {
                     viewModel.cadastrar(nome, email, senha, confirmarSenha)
+                }
+            )
+            Spacer(Modifier.height(15.dp))
+
+            Text(
+                text = "ou cadastre-se com",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 5.dp)
+            )
+            BotaoGoogle(
+                onGoogleSignInSelected = { token ->
+                    viewModel.loginComGoogle(token)
+                },
+                onError = { erro ->
+                    Toast.makeText(context, erro, Toast.LENGTH_SHORT).show()
                 }
             )
         }

@@ -1,7 +1,9 @@
 package com.example.pegapista.ui.viewmodels
 
+import android.app.Application
 import android.net.Uri
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pegapista.data.models.Comentario
@@ -16,11 +18,14 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.storage
+import comprimirImagem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,7 +38,7 @@ data class PostUiState(
     val error: String? = null
 )
 
-class PostViewModel : ViewModel() {
+class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = PostRepository()
     private val userRepository = UserRepository()
     private val notificationRepository = NotificationRepository()
@@ -56,6 +61,7 @@ class PostViewModel : ViewModel() {
     // IMAGENS (agora no plural - JULIO EMANUEL)
     private val _fotosSelecionadasUris = MutableStateFlow<List<Uri>>(emptyList())
     val fotosSelecionadasUris: StateFlow<List<Uri>> = _fotosSelecionadasUris
+
     val meuId: String
         get() = auth.currentUser?.uid ?: ""
 
@@ -95,20 +101,24 @@ class PostViewModel : ViewModel() {
     }
     private suspend fun uploadImagens(uris: List<Uri>): List<String> {
         val urlsDownload = mutableListOf<String>()
-
-        for (uri in uris) {
-            val nomeArquivo = "${System.currentTimeMillis()}_${uri.lastPathSegment}"
-            val ref = storage.reference.child("posts_images/$nomeArquivo")
-
-            try {
-                ref.putFile(uri).await()
-                val url = ref.downloadUrl.await().toString()
-                urlsDownload.add(url)
-            } catch (e: Exception) {
-                e.printStackTrace()
+        val context = getApplication<Application>().applicationContext
+        return withContext(Dispatchers.IO) {
+            for (uri in uris) {
+                val nomeArquivo = "${System.currentTimeMillis()}_${UUID.randomUUID()}.jpg"
+                val ref = storage.reference.child("posts_images/$nomeArquivo")
+                try {
+                    val dadosDaImagem = comprimirImagem(context, uri)
+                    if (dadosDaImagem != null) {
+                        ref.putBytes(dadosDaImagem).await()
+                        val url = ref.downloadUrl.await().toString()
+                        urlsDownload.add(url)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
+            urlsDownload
         }
-        return urlsDownload
     }
     fun compartilharCorrida(
         titulo: String,
@@ -128,12 +138,15 @@ class PostViewModel : ViewModel() {
                 tempo = tempo,
                 pace = pace
             )
+            val tituloFinal = titulo.ifBlank { "Treino finalizado" }
+            val descricaoFinal = descricao.ifBlank { "Atividade registrada." }
+
             val novaPostagem = Postagem(
                 id = repository.gerarIdPost(),
                 autorNome = usuarioAtual.nickname,
                 userId = usuarioAtual.id,
-                titulo = titulo,
-                descricao = descricao,
+                titulo = tituloFinal,
+                descricao = descricaoFinal,
                 corrida = corridaDados,
                 urlsFotos = listaDeUrls,
                 data = System.currentTimeMillis()
@@ -184,6 +197,9 @@ class PostViewModel : ViewModel() {
                     }
                 }
                 _feedState.value = novaListaFeed
+                if (post.userId==meuId) {
+                    return@launch
+                }
                 val novaNotificacao = Notificacao(
                     destinatarioId = post.userId,
                     remetenteId = meuId,
@@ -214,6 +230,12 @@ class PostViewModel : ViewModel() {
                 data = System.currentTimeMillis()
             )
             val sucesso = repository.enviarComentario(postId, novoComentario)
+            if (sucesso) {
+                carregarComentarios(postId)
+            }
+            if (remetenteId==meuId) {
+                return@launch
+            }
             val novaNotificacao = Notificacao(
                 destinatarioId = remetenteId,
                 remetenteId = meuId,
@@ -229,9 +251,6 @@ class PostViewModel : ViewModel() {
                     e.printStackTrace()
                 }
             }
-            if (sucesso) {
-                carregarComentarios(postId)
-            }
         }
     }
 
@@ -245,5 +264,13 @@ class PostViewModel : ViewModel() {
     fun formatarDataHora(timestamp: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy 'às' HH:mm", Locale("pt", "BR"))
         return sdf.format(Date(timestamp))
+    }
+
+    suspend fun getFotoPerfil(userId: String): String? {
+        return try {
+            userRepository.getUsuarioPorId(userId)?.fotoPerfilUrl
+        } catch (e: Exception) {
+            null
+        }
     }
 }

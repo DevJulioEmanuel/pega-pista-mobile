@@ -63,6 +63,11 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:6.12.0")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // Login com conta google
+
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
     implementation("com.google.firebase:firebase-storage")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.androidx.core.ktx)

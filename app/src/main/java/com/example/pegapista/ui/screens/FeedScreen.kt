@@ -2,6 +2,8 @@ package com.example.pegapista.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,12 +57,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import com.example.pegapista.R
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PostViewModel
@@ -73,6 +79,7 @@ fun FeedScreen(
     onRankingScreen: () -> Unit,
     onBuscarAmigosScreen: () -> Unit,
     onCommentClick: (Postagem) -> Unit,
+    onProfileClick: (String) -> Unit,
     viewModel: PostViewModel = viewModel()
 ) {
     val postagens by viewModel.feedState.collectAsState()
@@ -162,6 +169,7 @@ fun FeedScreen(
                     items(postagens) { post ->
                         PostCard(
                             post = post,
+                            viewModel = viewModel,
                             data = viewModel.formatarDataHora(post.data),
                             currentUserId = meuId,
                             onLikeClick = {
@@ -173,7 +181,8 @@ fun FeedScreen(
                             onDeleteClick = { postId ->
                                 showDeleteDialog = true
                                 postDeleteId = postId
-                            }
+                            },
+                            onProfileClick = onProfileClick
                         )
                     }
                 }
@@ -207,11 +216,13 @@ fun FeedScreen(
 @Composable
 fun PostCard(
     post: Postagem,
+    viewModel: PostViewModel = viewModel(),
     data: String = "",
     onLikeClick: () -> Unit,
     onCommentClick: (Postagem) -> Unit,
     currentUserId: String,
-    onDeleteClick: (String) -> Unit = {}
+    onDeleteClick: (String) -> Unit = {},
+    onProfileClick: (String) -> Unit
 ) {
     val context = LocalContext.current
     val euCurti = post.curtidas.contains(currentUserId)
@@ -222,6 +233,14 @@ fun PostCard(
     val listaImagens = post.urlsFotos
 
     var menuExpandido by remember { mutableStateOf(false) }
+
+    var fotoPerfilUrl by remember { mutableStateOf("") }
+    LaunchedEffect(post.userId) {
+        val url = viewModel.getFotoPerfil(post.userId)
+        if (url != null) {
+            fotoPerfilUrl = url
+        }
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -237,15 +256,29 @@ fun PostCard(
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Filled.AccountCircle,
-                    contentDescription = "",
-                    modifier = Modifier.size(45.dp),
-                    tint = Color.Gray
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(fotoPerfilUrl)
+                        .crossfade(true)
+                        .crossfade(500)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .build(),
+                    contentDescription = "Foto do usuário",
+                    modifier = Modifier
+                        .size(45.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, Color.White, CircleShape),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.perfil_padrao),
+                    error = painterResource(R.drawable.perfil_padrao)
                 )
                 Spacer(Modifier.width(5.dp))
                 Column (
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onProfileClick(post.userId) }
+                        .padding(start = 4.dp)
                 ){
                     Text(
                         text=post.autorNome,
@@ -424,6 +457,6 @@ fun metadadosCorrida(dado: String, metadado: String) {
 @Composable
 fun FeedScreenPreview() {
     PegaPistaTheme {
-        FeedScreen(onRankingScreen = {}, onBuscarAmigosScreen = {}, onCommentClick = {})
+        FeedScreen(onRankingScreen = {}, onBuscarAmigosScreen = {}, onCommentClick = {}, onProfileClick = {})
     }
 }

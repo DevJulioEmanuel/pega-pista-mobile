@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +49,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Postagem
@@ -74,6 +78,7 @@ fun PerfilUsuarioScreen(
     LaunchedEffect(Unit) {
         viewModel.carregarPerfilUsuario(idUsuario)
     }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -88,26 +93,29 @@ fun PerfilUsuarioScreen(
             Spacer(modifier = Modifier.height(5.dp))
             MetadadosUsuarioPerfil(usuario)
         }
-        item {
-            Spacer(Modifier.height(30.dp))
-            Button(
-                onClick = { viewModel.toggleSeguir() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSeguindo) Color.White else Color(0xFF0FDC52),
-                    contentColor = if (isSeguindo) MaterialTheme.colorScheme.primary else Color.White
-                ),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(50.dp)
-            ) {
-                Text(
-                    text = if (isSeguindo) "Seguindo ✓" else "Seguir",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+        if (usuario.id!=meuId) {
+            item {
+                Spacer(Modifier.height(30.dp))
+                Button(
+                    onClick = { viewModel.toggleSeguir() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSeguindo) Color.White else Color(0xFF0FDC52),
+                        contentColor = if (isSeguindo) MaterialTheme.colorScheme.primary else Color.White
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(50.dp)
+                ) {
+                    Text(
+                        text = if (isSeguindo) "Seguindo ✓" else "Seguir",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
             }
         }
+
         item {
             Spacer(Modifier.height(20.dp))
             if (posts.isNotEmpty()) {
@@ -141,6 +149,7 @@ fun PerfilUsuarioScreen(
                     onCommentClick = {
                         onCommentClick(post)
                     },
+                    onProfileClick = {}
                     )
             }
         }
@@ -149,7 +158,6 @@ fun PerfilUsuarioScreen(
             Spacer(Modifier.height(50.dp))
         }
     }
-        Spacer(Modifier.height(20.dp))
     }
 
 
@@ -161,13 +169,21 @@ fun TopUsuarioPerfil(user: Usuario) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Image(
-            painterResource(R.drawable.jaco),
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(user.fotoPerfilUrl)
+                .crossfade(true)
+                .crossfade(500)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .build(),
             contentDescription = "Foto do usuário",
             modifier = Modifier
                 .size(125.dp)
                 .clip(CircleShape)
-                .border(5.dp, Color.White, CircleShape)
+                .border(5.dp, Color.White, CircleShape),
+            placeholder = painterResource(R.drawable.perfil_padrao),
+            error = painterResource(R.drawable.perfil_padrao)
         )
         Spacer(Modifier.height(5.dp))
         Text(

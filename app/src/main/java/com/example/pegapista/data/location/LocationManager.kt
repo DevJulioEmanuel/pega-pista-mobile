@@ -1,4 +1,4 @@
-package com.example.pegapista.data.manager // Ajuste se criou a pasta diferente
+package com.example.pegapista.data.location
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -18,7 +18,7 @@ class LocationManager(context: Context) {
         fun onLocationUpdate(velocidadeKmh: Double, distanciaMetros: Float, location: Location)
     }
 
-    @SuppressLint("MissingPermission") // A permissão será checada na UI antes de chamar isso
+    @SuppressLint("MissingPermission")
     fun startTracking(listener: LocationListener) {
         distanciaTotal = 0f
         locationAnterior = null

@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,12 +39,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
@@ -123,7 +128,7 @@ fun BuscarAmigosScreen(
                 }
 
                 items(usuariosEncontrados) { usuario ->
-                    CardUsuario(usuario, onPerfilUsuarioScreen)
+                    CardUsuario(usuario, onPerfilUsuarioScreen, viewModel)
                 }
             }
         }
@@ -131,7 +136,19 @@ fun BuscarAmigosScreen(
 }
 
 @Composable
-fun CardUsuario(usuario: Usuario, onPerfilUsuarioScreen: (String) -> Unit) {
+fun CardUsuario(
+    usuario: Usuario,
+    onPerfilUsuarioScreen: (String) -> Unit,
+    viewModel: BuscaViewModel
+) {
+    var fotoPerfilUrl by remember { mutableStateOf("") }
+
+    LaunchedEffect(usuario.id) {
+        val url = viewModel.getFotoPerfil(usuario.id)
+        if (url != null) {
+            fotoPerfilUrl = url
+        }
+    }
     Card (
         modifier = Modifier,
         onClick = { onPerfilUsuarioScreen(usuario.id) }
@@ -140,13 +157,21 @@ fun CardUsuario(usuario: Usuario, onPerfilUsuarioScreen: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth().background(Color.White)
         ) {
             Spacer(Modifier.width(10.dp))
-            Image(
-                painterResource(R.drawable.jaco),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(fotoPerfilUrl)
+                    .crossfade(true)
+                    .crossfade(500)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .memoryCachePolicy(CachePolicy.ENABLED)
+                    .build(),
                 contentDescription = "Foto do usuário",
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .border(2.dp, Color.White, CircleShape)
+                    .border(2.dp, Color.White, CircleShape),
+                placeholder = painterResource(R.drawable.perfil_padrao),
+                error = painterResource(R.drawable.perfil_padrao)
             )
             Spacer(Modifier.width(10.dp))
             Text(

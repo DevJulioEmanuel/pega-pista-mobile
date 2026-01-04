@@ -9,16 +9,16 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.example.pegapista.R
-import com.example.pegapista.data.manager.LocationManager
+import com.example.pegapista.data.location.LocationManager
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
 
-class RunningService : Service() {
+class RunningService: Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private lateinit var locationManager: LocationManager
     private val notificationId = 1
+    private var distanciaAcumuladaOffset = 0f
 
     override fun onCreate() {
         super.onCreate()
@@ -37,21 +37,21 @@ class RunningService : Service() {
 
     private fun startRun() {
         if (RunningState.isRastreando.value) return
-
+        distanciaAcumuladaOffset = RunningState.distanciaMetros.value
         RunningState.isRastreando.value = true
 
         startForeground(notificationId, buildNotification())
 
         locationManager.startTracking(object : LocationManager.LocationListener {
-            override fun onLocationUpdate(velKmh: Double, distMetros: Float, loc: Location) {
-                RunningState.distanciaMetros.value = distMetros
-
-                val novoPonto = LatLng(loc.latitude, loc.longitude)
+            override fun onLocationUpdate(velocidadeKmh: Double, distanciaMetros: Float, location: Location) {
+                val distanciaTotal = distanciaAcumuladaOffset + distanciaMetros
+                RunningState.distanciaMetros.value = distanciaTotal
+                val novoPonto = LatLng(location.latitude, location.longitude)
                 val listaAtual = RunningState.percurso.value.toMutableList()
                 listaAtual.add(novoPonto)
                 RunningState.percurso.value = listaAtual
 
-                updateNotification("Distância: %.2f km".format(distMetros / 1000))
+                updateNotification("Distância: %.2f km".format(distanciaMetros / 1000))
             }
         })
 
@@ -76,6 +76,7 @@ class RunningService : Service() {
         pauseRun()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+        distanciaAcumuladaOffset = 0f
     }
 
     private fun calcularPace(distanciaMetros: Float, segundos: Long) {

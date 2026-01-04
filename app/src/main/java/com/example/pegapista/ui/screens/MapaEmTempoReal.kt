@@ -1,12 +1,15 @@
 package com.example.pegapista.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.R
 import com.example.pegapista.service.RunningState
@@ -34,12 +37,17 @@ fun MapaEmTempoReal(
     val cameraPositionState = rememberCameraPositionState()
     var cameraJaAjustada by remember { mutableStateOf(false) }
 
+    val temPermissao = remember {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
 
     //Para centralziar a tela
     LaunchedEffect(pontoInicial) {
         if (!cameraJaAjustada && caminhoPercorrido.isEmpty()) {
             pontoInicial?.let { latLng ->
-                // Move a câmera instantaneamente pra posição do usuário
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 17f)
                 cameraJaAjustada = true
             }
@@ -65,7 +73,7 @@ fun MapaEmTempoReal(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         properties = MapProperties(
-            isMyLocationEnabled = true,
+            isMyLocationEnabled = temPermissao,
             mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_clean)
         ),
         uiSettings = MapUiSettings(

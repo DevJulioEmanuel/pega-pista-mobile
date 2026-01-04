@@ -3,6 +3,7 @@ package com.example.pegapista.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -39,8 +41,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import com.example.pegapista.R
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.viewmodels.RankingViewModel
 
@@ -100,7 +107,6 @@ fun RankingScreen(
         Column(
             modifier = modifier
                 .fillMaxWidth(),
-            // verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -122,16 +128,12 @@ fun RankingScreen(
                 }
                 Button(
                     onClick = { },
-
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-
                     shape = RoundedCornerShape(50)
                 ) {
                     Text("Ranking", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
-            //Spacer(modifier = Modifier.weight(1f))
-
             Spacer(modifier = Modifier.height(40.dp))
 
             if (ranking.isEmpty()) {
@@ -146,7 +148,8 @@ fun RankingScreen(
                         ItemRanking(
                             nome = usuario.nickname,
                             sequencia = usuario.diasSeguidos,
-                            posição = index + 1
+                            posição = index + 1,
+                            usuario
                         )
                     }
                 }
@@ -157,13 +160,13 @@ fun RankingScreen(
         Image(
             painter = painterResource(R.drawable.podio),
             contentDescription = "PodioGeral",
-            modifier = Modifier.size(200.dp) // CORREÇÃO: Valor razoável em vez de 3000.dp
+            modifier = Modifier.size(200.dp)
         )
     }
 }
 
 @Composable
-fun ItemRanking(nome: String, sequencia: Int, posição: Int) { // CORREÇÃO: Removido 'info'
+fun ItemRanking(nome: String, sequencia: Int, posição: Int, usuario: Usuario) {
     Surface(
         color = MaterialTheme.colorScheme.primary,
         shape = RoundedCornerShape(12.dp),
@@ -183,11 +186,21 @@ fun ItemRanking(nome: String, sequencia: Int, posição: Int) { // CORREÇÃO: R
                 modifier = Modifier.width(45.dp)
             )
 
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(35.dp)
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(usuario.fotoPerfilUrl)
+                    .crossfade(true)
+                    .crossfade(500)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .memoryCachePolicy(CachePolicy.ENABLED)
+                    .build(),
+                contentDescription = "Foto do usuário",
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, Color.White, CircleShape),
+                placeholder = painterResource(R.drawable.perfil_padrao),
+                error = painterResource(R.drawable.perfil_padrao)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -210,7 +223,7 @@ fun ItemRanking(nome: String, sequencia: Int, posição: Int) { // CORREÇÃO: R
                 Icon(
                     painter = painterResource(R.drawable.logo_fogo),
                     contentDescription = null,
-                    tint = Color.Unspecified, // Mantém as cores originais do seu PNG/Vector
+                    tint = Color.Unspecified,
                     modifier = Modifier.size(24.dp)
                 )
             }

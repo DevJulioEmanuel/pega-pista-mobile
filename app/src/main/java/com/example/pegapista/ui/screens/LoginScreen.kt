@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.R
+import com.example.pegapista.ui.screens.BotaoGoogle
 import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.AuthViewModel
@@ -60,7 +61,7 @@ fun LoginScreen(
         if (uiState.isSuccess) {
             Toast.makeText(context, "Bem-vindo!", Toast.LENGTH_SHORT).show()
             onEntrarHome()
-            viewModel.resetState() // Limpa o estado para não rodar de novo ao voltar
+            viewModel.resetState()
         }
     }
 
@@ -103,6 +104,21 @@ fun LoginScreen(
         ButtonEntrar(
             onClick = {
                 viewModel.login(email, senha)
+            }
+        )
+        Spacer(Modifier.height(15.dp))
+        Text(
+            text = "ou",
+            fontSize = 12.sp,
+            color = Color.Gray,
+            modifier = Modifier.padding(vertical = 5.dp)
+        )
+        BotaoGoogle(
+            onGoogleSignInSelected = { token ->
+                viewModel.loginComGoogle(token)
+            },
+            onError = { erro ->
+                Toast.makeText(context, erro, Toast.LENGTH_SHORT).show()
             }
         )
     }

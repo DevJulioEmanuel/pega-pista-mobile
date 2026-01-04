@@ -13,12 +13,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -35,25 +38,22 @@ import com.example.pegapista.utils.showNotification
 @Composable
 fun AtividadeBeforeScreen(
     modifier: Modifier = Modifier,
-    onStartActivity: () -> Unit = {}
+    onStartActivity: () -> Unit = {},
+    onAbrirMapa: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
-    // Configura o Launcher para pedir permissão (Android 13+)
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Se o usuário permitiu, envia a notificação e inicia
             showNotification(context, "Atividade Iniciada!", "Bom treino, continue firme!")
             onStartActivity()
         } else {
-            // Se negou, inicia sem notificação
             onStartActivity()
         }
     }
 
-    // Função interna para validar e disparar
     val handleStartClick = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasPermission = ContextCompat.checkSelfPermission(
@@ -71,7 +71,6 @@ fun AtividadeBeforeScreen(
             onStartActivity()
         }
     }
-    //Coluna Principal
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -79,9 +78,7 @@ fun AtividadeBeforeScreen(
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo
 
-        // Container Principal
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,11 +94,12 @@ fun AtividadeBeforeScreen(
 
             TituloAtividade("Tudo pronto para correr!")
 
-            // Área Central (Ícone ilustrativo no lugar do Mapa)
             CardIlustracaoAtividade()
 
-            // Botão de Ação
-            ButtonIniciarAtividade(onClick = { handleStartClick() })
+            AcoesAtividade(
+                onStartClick = { handleStartClick() },
+                onMapaClick = { onAbrirMapa() }
+            )
         }
     }
 }
@@ -166,7 +164,38 @@ fun CardIlustracaoAtividade() {
 }
 
 @Composable
-fun ButtonIniciarAtividade(onClick: () -> Unit) {
+fun AcoesAtividade(
+    onStartClick: () -> Unit,
+    onMapaClick: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(32.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        BotaoCircularGrande(
+            cor = Color(0xFF6CDE21),
+            icone = Icons.Default.PlayArrow,
+            texto = "Iniciar",
+            onClick = onStartClick
+        )
+
+        BotaoCircularGrande(
+            cor = MaterialTheme.colorScheme.secondary,
+            icone = Icons.Default.Map,
+            texto = "Mapa",
+            onClick = onMapaClick
+        )
+    }
+}
+
+@Composable
+fun BotaoCircularGrande(
+    cor: Color,
+    icone: ImageVector,
+    texto: String,
+    onClick: () -> Unit
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clickable { onClick() }
@@ -175,33 +204,25 @@ fun ButtonIniciarAtividade(onClick: () -> Unit) {
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(90.dp)
-                .shadow(
-                    elevation = 10.dp,
-                    shape = CircleShape
-                )
-                .background(
-                    color = MaterialTheme.colorScheme.secondary,
-                    shape = CircleShape
-                )
+                .shadow(10.dp, CircleShape)
+                .background(cor, CircleShape)
         ) {
             Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Começar",
-                tint = MaterialTheme.colorScheme.onSecondary,
-                modifier = Modifier.size(50.dp)
+                imageVector = icone,
+                contentDescription = texto,
+                tint = Color.White,
+                modifier = Modifier.size(48.dp)
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Toque para\ncomeçar",
+            text = texto,
             color = MaterialTheme.colorScheme.onPrimary,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-            lineHeight = 16.sp
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

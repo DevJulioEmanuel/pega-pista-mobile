@@ -41,14 +41,12 @@ class UserRepository {
         val agora = System.currentTimeMillis()
         val ultimaAtiv = usuario.ultimaAtividade
 
-        // 1. Se já fez algo HOJE, não aumenta a sequência de novo
         if (DateUtils.isMesmoDia(agora, ultimaAtiv)) return
 
-        // 2. Define a nova sequência
         val novaSequencia = if (DateUtils.isOntem(ultimaAtiv)) {
-            usuario.diasSeguidos + 1 // Ontem ele fez, então é +1
+            usuario.diasSeguidos + 1
         } else {
-            1 // Não fez ontem, então reseta ou inicia em 1
+            1
         }
 
         // Verifica recorde
@@ -197,18 +195,35 @@ class UserRepository {
 
             if (todosIds.isEmpty()) return emptyList()
 
-            // Se tiver mais que 10 amigos, precisará fazer múltiplas consultas ou mudar a lógica.
             val snapshot = usersRef
                 .whereIn("id", todosIds)
                 .get()
                 .await()
 
             snapshot.toObjects(Usuario::class.java)
-                .sortedByDescending { it.diasSeguidos } // Ordena pelo foguinho
+                .sortedByDescending { it.diasSeguidos }
         } catch (e: Exception) {
             emptyList()
         }
     }
 
+    //SALVAR CORRIDA E INFORMACOES
+
+    suspend fun somarEstatisticasCorrida(distanciaKm: Double, tempoSegundos: Long, calorias: Int) {
+        val uid = auth.currentUser?.uid ?: return
+
+        try {
+            val updates = mapOf(
+                "distanciaTotalKm" to FieldValue.increment(distanciaKm),
+                "tempoTotalSegundos" to FieldValue.increment(tempoSegundos),
+                "caloriasQueimadas" to FieldValue.increment(calorias.toLong()),
+            )
+            usersRef.document(uid).update(updates).await()
+            atualizarSequenciaDiaria()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
 }

@@ -5,15 +5,17 @@ import android.app.Application
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.retain.LocalRetainedValuesStoreProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.example.pegapista.data.manager.LocationManager
+import com.example.pegapista.data.location.LocationManager
 import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.data.repository.CorridaRepository
+import com.example.pegapista.data.repository.UserRepository
 import com.example.pegapista.service.RunningService
 import com.example.pegapista.service.RunningState
 import com.google.android.gms.location.LocationServices
@@ -37,6 +39,8 @@ data class SaveRunState(
 class CorridaViewModel(application: Application) : AndroidViewModel(application), KoinComponent {
 
     private val repository: CorridaRepository by inject()
+    private val userRepository: UserRepository by inject()
+
 
     private val _saveState = MutableStateFlow(SaveRunState())
     val saveState = _saveState.asStateFlow()
@@ -67,6 +71,7 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun iniciarCorrida() {
+        if (isRastreando.value) return
         RunningState.tempoSegundos.value = 0L
         RunningState.distanciaMetros.value = 0f
         RunningState.pace.value = "-:--"
@@ -89,18 +94,35 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
             val tempoFinal = RunningState.tempoSegundos.value
             val paceFinal = RunningState.pace.value
 
+            val distKm = distFinal / 1000.0
+            val caloriasEstimadas = (distKm * 70).toInt()
+
             val novaCorrida = Corrida(
                 id = repository.gerarIdCorrida(),
-                distanciaKm = (distFinal / 1000).toDouble(),
+                distanciaKm = distKm,
                 tempo = formatarTempoParaString(tempoFinal),
                 pace = paceFinal
             )
 
             repository.salvarCorrida(novaCorrida).onSuccess {
-                _saveState.value = SaveRunState(isSuccess = true)
+                try {
+                    userRepository.somarEstatisticasCorrida(
+                        distanciaKm = distKm,
+                        tempoSegundos = tempoFinal,
+                        calorias = caloriasEstimadas
+                    )
+                    _saveState.value = SaveRunState(isSuccess = true)
+                } catch (e: Exception) {
+                    _saveState.value = SaveRunState(isSuccess = false, error = e.message)
+                    val mensagemErro = e.message
+                    Log.e("PegaPistaLog", "FALHA AO SALVAR: $mensagemErro")
+                }
             }.onFailure {
                 _saveState.value = SaveRunState(error = it.message)
+                val mensagemErro = it.message
+                Log.e("PegaPistaLog", "FALHA AO SALVAR: $mensagemErro")
             }
+
         }
     }
 
