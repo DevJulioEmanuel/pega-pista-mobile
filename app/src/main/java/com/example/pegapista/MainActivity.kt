@@ -1,5 +1,6 @@
 package com.example.pegapista
 
+import PegaPistaScreen
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -14,11 +15,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
+import androidx.navigation.compose.rememberNavController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.pegapista.di.storageModule
+import com.example.pegapista.service.RunningState
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.utils.CHANNEL_ID
 import com.example.pegapista.worker.LembreteWorker
@@ -31,6 +36,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         createNotificationChannel()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {

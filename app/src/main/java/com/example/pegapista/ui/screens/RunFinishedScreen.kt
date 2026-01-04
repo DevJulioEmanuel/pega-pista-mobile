@@ -34,6 +34,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -337,7 +338,15 @@ fun RunFinishedScreen(
 @Composable
 fun StatItem(valor: String, unidade: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = valor, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Black)
+        Text(
+            text = valor,
+            fontWeight = FontWeight.Bold,
+            fontSize = if (valor.length > 5) 17.sp else 20.sp,
+            color = Color.Black,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Visible
+        )
         Text(text = unidade, fontSize = 12.sp, color = Color.Gray)
     }
 }

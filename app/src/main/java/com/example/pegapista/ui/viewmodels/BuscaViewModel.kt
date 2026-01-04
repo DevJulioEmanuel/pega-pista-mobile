@@ -51,4 +51,12 @@ class BuscaViewModel : ViewModel() {
             _isLoading.value = false
         }
     }
+
+    suspend fun getFotoPerfil(userId: String): String? {
+        return try {
+            repository.getUsuarioPorId(userId)?.fotoPerfilUrl
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
