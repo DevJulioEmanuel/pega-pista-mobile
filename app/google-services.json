@@ -12,7 +12,20 @@
           "package_name": "com.example.pegapista"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "REMOVED_CLIENT_ID",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pegapista",
+            "certificate_hash": "REMOVED_SHA1"
+          }
+        },
+        {
+          "client_id": "WEB_CLIENT_ID_REMOVED",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "REMOVED_API_KEY"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "WEB_CLIENT_ID_REMOVED",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
