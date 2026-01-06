@@ -3,7 +3,7 @@ package com.example.pegapista.database.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity(tableName = "users")
 data class UserEntity (
     @PrimaryKey
     val id: String = "",
@@ -14,5 +14,6 @@ data class UserEntity (
     val tempoTotalSegundos: Long = 0,
     val caloriasQueimadas: Int = 0,
     val diasSeguidos: Int = 0,
-    val recordeDiasSeguidos: Int = 0
+    val recordeDiasSeguidos: Int = 0,
+    val userSincronizado: Boolean = false
 )
