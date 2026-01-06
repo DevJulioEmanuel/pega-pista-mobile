@@ -86,11 +86,7 @@ fun HomeScreen(
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//        Image(
-//            painter = painterResource(R.drawable.logo_aplicativo),
-//            contentDescription = "Logo do aplicativo",
-//            modifier = Modifier.size(80.dp)
-//        )
+
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
@@ -109,26 +105,22 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ){
-                    // Lado Esquerdo (Fogo)
+                ) {
                     Image(
                         painter = painterResource(R.drawable.logo_fogo),
                         contentDescription = "Fogo de sequência",
                         modifier = Modifier.size(90.dp)
                     )
-
-                    // Lado Direito (Info)
-
                     Column(
                         horizontalAlignment = Alignment.End,
                         modifier = Modifier.padding(end = 2.dp)
                     ) {
-
-                        // 1. O Balão Branco (Cima)
                         Surface(
                             shape = RoundedCornerShape(30),
                             color = Color.White,
-                            modifier = Modifier.offset(y = 10.dp).zIndex(1f) //deixar um por cima do oto
+                            modifier = Modifier
+                                .offset(y = 10.dp)
+                                .zIndex(1f)
                         ) {
                             Text(
                                 text = "Sequência de $dias dias consecutivos",
@@ -139,7 +131,6 @@ fun HomeScreen(
                             )
                         }
 
-                        // 2. O Quadrado Azul Escuro (Baixo)
                         Surface(
                             shape = RoundedCornerShape(20),
                             color = Color(0xFF0277BD),
@@ -157,16 +148,12 @@ fun HomeScreen(
                     }
 
                 }
-                // ESPAÇAMENTO ENTRE TOPICOS
                 Spacer(modifier = Modifier.height(35.dp))
 
-// --- LINHA DO MEIO (SEU RANK vs AMIGOS) ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    // --- LADO ESQUERDO:
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.weight(1f)
@@ -188,15 +175,13 @@ fun HomeScreen(
                                 text = "Está é sua posição no ranking dos amigos",
                                 fontSize = 7.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                maxLines = 1, // <--- Força a ser apenas 1 linha
+                                maxLines = 1,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp, vertical = 1.dp)
                             )
                         }
                     }
-
-                    // --- LADO DIREITO: TÍTULO DO RANKING ---
 
                     Column(
                         horizontalAlignment = Alignment.End,
@@ -205,7 +190,6 @@ fun HomeScreen(
                             .padding(end = 16.dp)
                     ) {
 
-                        // --- LADO DIREITO: RANKING ---
 
                         Text(
                             text = "Ranking dos Amigos 🏆",
@@ -221,7 +205,6 @@ fun HomeScreen(
                                 nome = user.nickname,
                                 largura = if (index == 0) 1f else 0.8f
                             )
-
                         }
                     }
                 }
@@ -255,12 +238,9 @@ fun HomeScreen(
                         )
                     }
                 }
-
-        // Este Spacer é mágico: ele ocupa TODO o espaço vazio que sobrar, empurrando o botão lá para baixo
                 Spacer(modifier = Modifier.weight(1f))
-
                 Spacer(modifier = Modifier.height(22.dp))
-// --- BOTÃO INICIAR CORRIDA ---
+
                 Button(
                     onClick = onIniciarCorrida,
                     colors = ButtonDefaults.buttonColors(
@@ -278,12 +258,10 @@ fun HomeScreen(
                         color = Color.White
                     )
                 }
-                }
-
-                }
             }
-
         }
+    }
+}
 
 
 @Composable
@@ -299,7 +277,6 @@ fun ItemAtividade(nome: String, info: String) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
         ) {
-            // Ícone do Usuário
             Icon(
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = null,
@@ -309,7 +286,6 @@ fun ItemAtividade(nome: String, info: String) {
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            //
             Column {
                 Text(
                     text = nome,
@@ -329,11 +305,10 @@ fun ItemAtividade(nome: String, info: String) {
 @Composable
 fun ItemRankingHome(posicao: String, nome: String, largura: Float) {
     Surface(
-        
         color = Color(0xFF0288D1),
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
-            .fillMaxWidth(largura) // <--- O SEGREDO: A largura varia (0.1 a 1.0)
+            .fillMaxWidth(largura)
             .padding(vertical = 2.dp)
     ) {
         Row(
@@ -360,12 +335,11 @@ fun ItemRankingHome(posicao: String, nome: String, largura: Float) {
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // Nome da Pessoa
             Text(
                 text = nome,
                 color = Color.White,
                 fontSize = 10.sp,
-                maxLines = 1 // Garante que não quebra linha
+                maxLines = 1
             )
         }
     }

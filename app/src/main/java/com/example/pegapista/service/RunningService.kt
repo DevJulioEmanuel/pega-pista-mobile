@@ -12,6 +12,7 @@ import com.example.pegapista.R
 import com.example.pegapista.data.manager.LocationManager
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class RunningService : Service() {
 

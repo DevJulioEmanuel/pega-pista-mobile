@@ -10,3 +10,4 @@ object RunningState {
     val percurso = MutableStateFlow<List<LatLng>>(emptyList())
     val isRastreando = MutableStateFlow(false)
 }
+

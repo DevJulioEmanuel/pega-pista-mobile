@@ -316,11 +316,12 @@ fun formatarUsuarioHoras(segundos: Long): String {
     return "%dh %02dm".format(horas, minutos)
 }
 
-
+/*
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PerfilUsuarioScreenPreview() {
     PegaPistaTheme {
-        PerfilScreen()
+        PerfilUsuarioScreen()
     }
 }
+ */

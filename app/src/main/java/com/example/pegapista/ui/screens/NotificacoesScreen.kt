@@ -1,5 +1,6 @@
 package com.example.pegapista.ui.screens
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,6 +8,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ModeComment
 import androidx.compose.material.icons.filled.Notifications
@@ -34,7 +37,6 @@ fun NotificacoesScreen(
     viewModel: NotificationsViewModel = viewModel()
 ) {
     val listaNotificacoes by viewModel.notificacoes.collectAsState()
-
     LaunchedEffect(Unit) {
         viewModel.carregarNotificacoes()
     }
@@ -47,13 +49,31 @@ fun NotificacoesScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text(
-            text = "Notificações",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 15.dp).align(Alignment.Start)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 15.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Notificações",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            if (listaNotificacoes.isNotEmpty()) {
+                TextButton(onClick = { viewModel.limparTudo() }) {
+                    Text(
+                        text = "Limpar Todas",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -75,18 +95,68 @@ fun NotificacoesScreen(
                     )
                 }
             } else {
-                // Lista Real
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    items(listaNotificacoes) { item ->
-                        NotificacaoItem(notificacao = item)
+                    items(
+                        items = listaNotificacoes,
+                        key = { it.id }
+                    ) { item ->
+                        SwipeToDeleteContainer(
+                            item = item,
+                            onDelete = { viewModel.excluirNotificacao(item.id) }
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SwipeToDeleteContainer(
+    item: Notificacao,
+    onDelete: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = {
+            if (it == SwipeToDismissBoxValue.EndToStart || it == SwipeToDismissBoxValue.StartToEnd) {
+                onDelete()
+                true
+            } else {
+                false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val color by animateColorAsState(
+                if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) Color.Transparent else Color.Red
+            )
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(color, RoundedCornerShape(15.dp))
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Excluir",
+                    tint = Color.White
+                )
+            }
+        },
+        content = {
+            Box() {
+                NotificacaoItem(notificacao = item)
+            }
+        }
+    )
 }
 
 @Composable
