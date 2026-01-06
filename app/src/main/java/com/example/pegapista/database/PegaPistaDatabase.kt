@@ -6,11 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.pegapista.database.AppDatabase
 import com.example.pegapista.database.dao.CorridaDao
+import com.example.pegapista.database.dao.UserDao
 import com.example.pegapista.database.entities.CorridaEntity
 
 @Database(entities = [CorridaEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun corridaDao(): CorridaDao
+    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile
