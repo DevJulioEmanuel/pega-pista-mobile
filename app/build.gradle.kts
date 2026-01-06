@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("kotlin-kapt")
 }
 
 android {
@@ -43,6 +44,21 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.work.runtime.ktx)
+    val room_version = "2.8.4"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-rxjava2:$room_version")
+    implementation("androidx.room:room-rxjava3:$room_version")
+    implementation("androidx.room:room-guava:$room_version")
+    testImplementation("androidx.room:room-testing:$room_version")
+    implementation("androidx.room:room-paging:$room_version")
+
+    val koin_version = "3.5.3"
+    implementation("io.insert-koin:koin-android:$koin_version")
+    implementation("io.insert-koin:koin-androidx-compose:$koin_version")
+
     // --- Mapas e Localização ---
     implementation("com.google.maps.android:maps-compose:6.12.0")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
@@ -61,27 +77,20 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-    // Se usares a versão do catalogo para navegação, podes remover a linha v277 abaixo
-    // implementation(libs.androidx.navigation.compose.v277)
-
-    // --- FIREBASE (A Correção) ---
-    // 1. O BoM gere as versões (MANTÉM ISTO)
     implementation(platform(libs.firebase.bom))
     // Implementação de login e senha
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-messaging:23.4.1")
 
-    // 3. ADICIONA isto para garantir que o Firebase inicializa (opcional, mas recomendado):
     implementation("com.google.firebase:firebase-analytics")
-
     implementation(libs.androidx.compose.runtime.livedata)
-
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.material3)
-
-
+    implementation(libs.androidx.room.common.jvm)
+    implementation("androidx.compose.animation:animation")
     // --- Testes ---
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -90,3 +99,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+

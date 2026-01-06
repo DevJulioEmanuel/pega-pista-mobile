@@ -1,5 +1,7 @@
 package com.example.pegapista
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -10,24 +12,26 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pegapista.navigation.NavigationGraph
 import com.example.pegapista.ui.screens.BottomBar
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PegaPistaScreen() {
-    // 1. O Controlador de navegação é criado AQUI
+
     val navController = rememberNavController()
 
-    // 2. Observamos a rota atual para decidir se mostramos a barra ou não
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // 3. Lista de telas que DEVEM ter a barra inferior
     val screensWithBottomBar = listOf(
         "Home",
         "comunidade",
-        "ranking",
+        "Ranking",
         "perfil",
         "AtividadeBefore",
         "AtividadeAfter",
-        "notificacoes"
+        "notificacoes",
+        "BuscarAmigos",
+        "PerfilUsuario/{idUsuario}"
     )
 
 
