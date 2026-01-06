@@ -18,6 +18,7 @@ import com.example.pegapista.ui.screens.FeedScreen
 import com.example.pegapista.ui.screens.HomeScreen
 import com.example.pegapista.ui.screens.InicioScreen
 import com.example.pegapista.ui.screens.LoginScreen
+import com.example.pegapista.ui.screens.MapaEmTempoReal
 import com.example.pegapista.ui.screens.NotificacoesScreen
 import com.example.pegapista.ui.screens.PerfilScreen
 import com.example.pegapista.ui.screens.PerfilUsuarioScreen
@@ -113,6 +114,7 @@ fun NavigationGraph(
             )
         }
 
+
         composable(
             route = "RunFinished/{distancia}/{tempo}/{pace}",
             arguments = listOf(
@@ -191,13 +193,20 @@ fun NavigationGraph(
             PerfilUsuarioScreen(
                 idUsuario = idUsuario,
                 onCommentClick = { post ->
-                    navController.navigate("comentarios/${post.id}")
+                    navController.navigate("comentarios/${post.id}/${idUsuario}")
                 })
         }
 
 
         composable("perfil") {
-            PerfilScreen()
+            PerfilScreen(
+                onDeslogar = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable("notificacoes") {

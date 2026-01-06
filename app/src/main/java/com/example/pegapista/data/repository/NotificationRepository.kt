@@ -13,4 +13,29 @@ class NotificationRepository {
         db.collection("notificacoes").add(notificacao).await()
     }
 
+    suspend fun excluirNotificacao(notificacaoId: String) {
+        try {
+            db.collection("notificacoes").document(notificacaoId).delete().await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun limparTodasNotificacoes(userId: String) {
+        try {
+            val snapshot = db.collection("notificacoes")
+                .whereEqualTo("destinatarioId", userId)
+                .get()
+                .await()
+
+            val batch = db.batch()
+            for (document in snapshot.documents) {
+                batch.delete(document.reference)
+            }
+            batch.commit().await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
 }
