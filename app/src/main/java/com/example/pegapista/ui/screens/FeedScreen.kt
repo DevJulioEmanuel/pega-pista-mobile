@@ -59,7 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import coil.compose.AsyncImage
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
@@ -73,7 +73,7 @@ fun FeedScreen(
     onRankingScreen: () -> Unit,
     onBuscarAmigosScreen: () -> Unit,
     onCommentClick: (Postagem) -> Unit,
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostViewModel = koinViewModel()
 ) {
     val postagens by viewModel.feedState.collectAsState()
     val meuId = viewModel.meuId

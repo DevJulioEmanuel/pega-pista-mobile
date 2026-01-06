@@ -1,7 +1,6 @@
 package com.example.pegapista.ui.viewmodels
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pegapista.data.models.Comentario
@@ -12,20 +11,14 @@ import com.example.pegapista.data.models.TipoNotificacao
 import com.example.pegapista.data.repository.NotificationRepository
 import com.example.pegapista.data.repository.PostRepository
 import com.example.pegapista.data.repository.UserRepository
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
-
 
 data class PostUiState(
     val isLoading: Boolean = false,
@@ -33,14 +26,16 @@ data class PostUiState(
     val error: String? = null
 )
 
-class PostViewModel : ViewModel() {
-    private val repository = PostRepository()
-    private val userRepository = UserRepository()
-    private val notificationRepository = NotificationRepository()
+// NOTA: Recebemos o repository pelo construtor (Injeção via Koin)
+class PostViewModel(
+    private val repository: PostRepository,
+    // Os outros repositórios, por enquanto, podes manter instanciados aqui ou injetar depois
+    private val userRepository: UserRepository = UserRepository(),
+    private val notificationRepository: NotificationRepository = NotificationRepository()
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(PostUiState())
     val uiState = _uiState.asStateFlow()
-
-    private val storage = Firebase.storage
 
     // ESTADO - FEED
     private val _feedState = MutableStateFlow<List<Postagem>>(emptyList())
@@ -50,42 +45,19 @@ class PostViewModel : ViewModel() {
     private val _comentariosState = MutableStateFlow<List<Comentario>>(emptyList())
     val comentariosState = _comentariosState.asStateFlow()
 
-    // ESTADO - ID
     private val auth = FirebaseAuth.getInstance()
-
-    // IMAGENS (agora no plural - JULIO EMANUEL)
-    private val _fotosSelecionadasUris = MutableStateFlow<List<Uri>>(emptyList())
-    val fotosSelecionadasUris: StateFlow<List<Uri>> = _fotosSelecionadasUris
     val meuId: String
         get() = auth.currentUser?.uid ?: ""
+
+    // IMAGENS (Offline First: guardamos Uris locais)
+    private val _fotosSelecionadasUris = MutableStateFlow<List<Uri>>(emptyList())
+    val fotosSelecionadasUris: StateFlow<List<Uri>> = _fotosSelecionadasUris
 
     init {
         carregarFeed()
     }
 
-    fun carregarFeed() {
-        viewModelScope.launch {
-            val meuId = auth.currentUser?.uid
-
-            if (meuId == null) {
-                _feedState.value = emptyList()
-                return@launch
-            }
-            val idsAmigos = userRepository.getIdsSeguindo()
-            val listaAmigos = idsAmigos.toMutableList()
-            listaAmigos.add(meuId)
-
-            val listaAmigosComLimite = listaAmigos.take(10)
-
-            if (listaAmigosComLimite.isNotEmpty()) {
-                val posts = repository.getFeedPosts(listaAmigosComLimite)
-                _feedState.value = posts
-            } else {
-                _feedState.value = emptyList()
-            }
-        }
-    }
-
+    // --- MANIPULAÇÃO DE FOTOS ---
     fun adicionarFoto(uri: Uri) {
         _fotosSelecionadasUris.value += uri
     }
@@ -93,23 +65,8 @@ class PostViewModel : ViewModel() {
     fun limparFotos() {
         _fotosSelecionadasUris.value = emptyList()
     }
-    private suspend fun uploadImagens(uris: List<Uri>): List<String> {
-        val urlsDownload = mutableListOf<String>()
 
-        for (uri in uris) {
-            val nomeArquivo = "${System.currentTimeMillis()}_${uri.lastPathSegment}"
-            val ref = storage.reference.child("posts_images/$nomeArquivo")
-
-            try {
-                ref.putFile(uri).await()
-                val url = ref.downloadUrl.await().toString()
-                urlsDownload.add(url)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        return urlsDownload
-    }
+    // --- FUNÇÃO PRINCIPAL: POSTAR ---
     fun compartilharCorrida(
         titulo: String,
         descricao: String,
@@ -120,31 +77,61 @@ class PostViewModel : ViewModel() {
         _uiState.value = PostUiState(isLoading = true)
 
         viewModelScope.launch {
-            val usuarioAtual = userRepository.getUsuarioAtual()
-            val listaDeUrls = uploadImagens(_fotosSelecionadasUris.value)
+            try {
+                val usuarioAtual = userRepository.getUsuarioAtual()
 
-            val corridaDados = Corrida(
-                distanciaKm = distancia,
-                tempo = tempo,
-                pace = pace
-            )
-            val novaPostagem = Postagem(
-                id = repository.gerarIdPost(),
-                autorNome = usuarioAtual.nickname,
-                userId = usuarioAtual.id,
-                titulo = titulo,
-                descricao = descricao,
-                corrida = corridaDados,
-                urlsFotos = listaDeUrls,
-                data = System.currentTimeMillis()
-            )
+                // 1. OFFLINE FIRST: Não fazemos upload agora.
+                // Pegamos as URIs locais e convertemos para String para salvar no banco local.
+                // O WorkManager vai pegar esses caminhos depois e fazer o upload real.
+                val listaCaminhosLocais = _fotosSelecionadasUris.value.map { it.toString() }
 
-            val resultado = repository.criarPost(novaPostagem)
+                val corridaDados = Corrida(
+                    distanciaKm = distancia,
+                    tempo = tempo,
+                    pace = pace
+                )
 
-            resultado.onSuccess {
-                _uiState.value = PostUiState(isSuccess = true)
-            }.onFailure { e ->
-                _uiState.value = PostUiState(error = e.message ?: "Erro")
+                val novaPostagem = Postagem(
+                    id = repository.gerarIdPost(), // Gera um ID único
+                    autorNome = usuarioAtual.nickname,
+                    userId = usuarioAtual.id,
+                    titulo = titulo,
+                    descricao = descricao,
+                    corrida = corridaDados,
+                    urlsFotos = listaCaminhosLocais, // SALVA O CAMINHO LOCAL (content://...)
+                    data = System.currentTimeMillis()
+                )
+
+                // 2. Chama o Repository (que salva no Room e agenda o WorkManager)
+                val resultado = repository.criarPost(novaPostagem)
+
+                resultado.onSuccess {
+                    _uiState.value = PostUiState(isSuccess = true)
+                    limparFotos() // Limpa seleção após sucesso
+                }.onFailure { e ->
+                    _uiState.value = PostUiState(error = e.message ?: "Erro desconhecido")
+                }
+            } catch (e: Exception) {
+                _uiState.value = PostUiState(error = e.message ?: "Erro ao criar post")
+            }
+        }
+    }
+
+    // --- FEED E LEITURA (Pode manter online por enquanto) ---
+    fun carregarFeed() {
+        viewModelScope.launch {
+            val uid = auth.currentUser?.uid ?: return@launch
+
+            // Lógica antiga mantida: busca amigos e carrega feed do Firebase
+            val idsAmigos = userRepository.getIdsSeguindo().toMutableList()
+            idsAmigos.add(uid)
+            val listaAmigosComLimite = idsAmigos.take(10)
+
+            if (listaAmigosComLimite.isNotEmpty()) {
+                val posts = repository.getFeedPosts(listaAmigosComLimite)
+                _feedState.value = posts
+            } else {
+                _feedState.value = emptyList()
             }
         }
     }
@@ -152,9 +139,8 @@ class PostViewModel : ViewModel() {
     fun excluirPost(postId: String) {
         viewModelScope.launch {
             _uiState.value = PostUiState(isLoading = true)
-
+            // Aqui podes melhorar depois para apagar do Room também
             val resultado = repository.excluirPost(postId)
-
             resultado.onSuccess {
                 carregarFeed()
                 _uiState.value = PostUiState(isSuccess = true)
@@ -164,40 +150,43 @@ class PostViewModel : ViewModel() {
         }
     }
 
-    // CURTIDAS E COMENTARIOS - JULIO EMANUEL
+    // --- CURTIDAS E COMENTÁRIOS (Lógica mantida) ---
+    // Nota: Esta parte continua funcionando online.
+    // Para funcionar offline, terias de criar tabelas locais para curtidas/comentários também,
+    // mas sugiro fazer isso num passo futuro para não complicar agora.
 
     fun toggleCurtidaPost(post: Postagem) {
         viewModelScope.launch {
-            val meuId = auth.currentUser?.uid ?: return@launch
-            val jaCurtiu = post.curtidas.contains(meuId)
-            val userAtual = userRepository.getUsuarioAtual()
-            val sucesso = repository.toggleCurtida(post.id, meuId, jaCurtiu)
+            val uid = meuId.ifEmpty { return@launch }
+            val jaCurtiu = post.curtidas.contains(uid)
+            val userAtual = userRepository.getUsuarioAtual() // Cuidado: isto faz chamada de rede se não tiver cache
+
+            val sucesso = repository.toggleCurtida(post.id, uid, jaCurtiu)
 
             if (sucesso) {
+                // Atualiza UI localmente para parecer rápido
                 val novaListaFeed = _feedState.value.map { p ->
                     if (p.id == post.id) {
                         val novasCurtidas = p.curtidas.toMutableList()
-                        if (jaCurtiu) novasCurtidas.remove(meuId) else novasCurtidas.add(meuId)
+                        if (jaCurtiu) novasCurtidas.remove(uid) else novasCurtidas.add(uid)
                         p.copy(curtidas = novasCurtidas)
                     } else {
                         p
                     }
                 }
                 _feedState.value = novaListaFeed
-                val novaNotificacao = Notificacao(
-                    destinatarioId = post.userId,
-                    remetenteId = meuId,
-                    remetenteNome = userAtual.nickname,
-                    tipo = TipoNotificacao.CURTIDA,
-                    mensagem = "${userAtual.nickname} curtiu a sua corrida!",
-                    data = System.currentTimeMillis()
-                )
-                launch {
-                    try {
-                        notificationRepository.criarNotificacao(novaNotificacao)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+
+                // Envia notificação apenas se for curtida (não descurtida) e não for o próprio post
+                if (!jaCurtiu && post.userId != uid) {
+                    val novaNotificacao = Notificacao(
+                        destinatarioId = post.userId,
+                        remetenteId = uid,
+                        remetenteNome = userAtual.nickname,
+                        tipo = TipoNotificacao.CURTIDA,
+                        mensagem = "${userAtual.nickname} curtiu a sua corrida!",
+                        data = System.currentTimeMillis()
+                    )
+                    launch { notificationRepository.criarNotificacao(novaNotificacao) }
                 }
             }
         }
@@ -213,23 +202,22 @@ class PostViewModel : ViewModel() {
                 texto = texto,
                 data = System.currentTimeMillis()
             )
+
             val sucesso = repository.enviarComentario(postId, novoComentario)
-            val novaNotificacao = Notificacao(
-                destinatarioId = remetenteId,
-                remetenteId = meuId,
-                remetenteNome = usuario.nickname,
-                tipo = TipoNotificacao.COMENTARIO,
-                mensagem = "${usuario.nickname} comentou na sua corrida!.",
-                data = System.currentTimeMillis()
-            )
-            launch {
-                try {
-                    notificationRepository.criarNotificacao(novaNotificacao)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
+
             if (sucesso) {
+                // Se não for o próprio dono do post, notifica
+                if (remetenteId != meuId) {
+                    val novaNotificacao = Notificacao(
+                        destinatarioId = remetenteId,
+                        remetenteId = meuId,
+                        remetenteNome = usuario.nickname,
+                        tipo = TipoNotificacao.COMENTARIO,
+                        mensagem = "${usuario.nickname} comentou na sua corrida!",
+                        data = System.currentTimeMillis()
+                    )
+                    launch { notificationRepository.criarNotificacao(novaNotificacao) }
+                }
                 carregarComentarios(postId)
             }
         }

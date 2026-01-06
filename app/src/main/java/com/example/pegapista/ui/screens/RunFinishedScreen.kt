@@ -38,7 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import coil.compose.AsyncImage
 import com.example.pegapista.R
 import com.example.pegapista.ui.components.SnapshotMap
@@ -60,7 +60,7 @@ fun RunFinishedScreen(
     pace: String = "-:--",
     caminhoPercorrido: List<LatLng> = emptyList(),
     onFinishNavigation: () -> Unit = {},
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostViewModel = koinViewModel()
 ) {
     // ESTADOS
     val context = LocalContext.current

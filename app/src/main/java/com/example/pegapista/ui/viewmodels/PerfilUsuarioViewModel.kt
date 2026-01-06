@@ -14,10 +14,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class PerfilUsuarioViewModel: ViewModel() {
+class PerfilUsuarioViewModel(
+    private val postRepository: PostRepository,
+    private val userRepository: UserRepository = UserRepository()
+): ViewModel() {
 
     private val repository = UserRepository()
-    private val postRepository = PostRepository()
+
     private val notificationRepository = NotificationRepository()
     private val _userState = MutableStateFlow(Usuario(nickname = "Carregando..."))
     val userState = _userState.asStateFlow()
@@ -54,7 +57,13 @@ class PerfilUsuarioViewModel: ViewModel() {
         }
     }
 
-
+    fun carregarPosts(userId: String) {
+        viewModelScope.launch {
+            // Usa 'postRepository' (o do construtor)
+            val posts = postRepository.getPostsPorUsuario(userId)
+            // ...
+        }
+    }
     fun toggleSeguir() {
         val userAlvo = _userState.value
         if (userAlvo.id.isBlank()) return
