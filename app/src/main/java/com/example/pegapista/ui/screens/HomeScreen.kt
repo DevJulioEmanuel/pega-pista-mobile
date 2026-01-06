@@ -67,11 +67,13 @@ import com.example.pegapista.ui.theme.BluePrimary
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import kotlin.math.sin
 import com.example.pegapista.data.models.Usuario
+import com.example.pegapista.data.models.Postagem
 
 @Composable
 fun HomeScreen(
     usuario: Usuario?,
     ranking: List<Usuario> = emptyList(),
+    atividades: List<Postagem> = emptyList(),
     onIniciarCorrida: () -> Unit
 ) {
     val dias = usuario?.diasSeguidos ?: 0
@@ -238,11 +240,21 @@ fun HomeScreen(
                     textAlign = TextAlign.Center
                 )
 
-                    // --- LISTA DE ATIVIDADES (Usando o componente que criamos) ---
-                ItemAtividade("Marina Sena", "5.0 km em 25:00 min")
-                ItemAtividade("Claudia Leite", "6.5 km em 32:40 min")
-                ItemAtividade("Molodoy", "10.5 km em 33:40 min")
-
+                if (atividades.isEmpty()) {
+                    Text(
+                        text = "Nenhuma atividade recente dos amigos.",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(vertical = 10.dp)
+                    )
+                } else {
+                    atividades.forEach { post ->
+                        ItemAtividade(
+                            nome = post.autorNome,
+                            info = "${post.corrida.distanciaKm} km em ${post.corrida.tempo} min"
+                        )
+                    }
+                }
 
         // Este Spacer é mágico: ele ocupa TODO o espaço vazio que sobrar, empurrando o botão lá para baixo
                 Spacer(modifier = Modifier.weight(1f))
