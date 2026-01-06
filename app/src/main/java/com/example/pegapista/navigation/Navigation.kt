@@ -84,9 +84,12 @@ fun NavigationGraph(
             val homeViewModel: HomeViewModel = viewModel()
             val usuario by homeViewModel.usuario.collectAsState()
             val ranking by homeViewModel.ranking.collectAsState()
+            val atividades by homeViewModel.atividadesAmigos.collectAsState()
+
             HomeScreen(
                 usuario = usuario,
                 ranking = ranking,
+                atividades = atividades,
                 onIniciarCorrida = { navController.navigate("AtividadeBefore") }
             )
         }
