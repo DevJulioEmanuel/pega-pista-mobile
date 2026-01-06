@@ -209,7 +209,7 @@ fun TopPerfil(
                 )
             } else {
                 Image(
-                    painterResource(R.drawable.jaco),
+                    painterResource(R.drawable.perfil_padrao),
                     contentDescription = "Foto padrão",
                     modifier = Modifier
                         .size(125.dp)

@@ -9,12 +9,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
 
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-        FirebaseFirestore.getInstance()
-            .collection("usuarios")
-            .document(uid)
-            .update("fcmToken", token)
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            FirebaseFirestore.getInstance()
+                .collection("usuarios")
+                .document(uid)
+                .update("fcmToken", token)
+        }
     }
 }
+
 

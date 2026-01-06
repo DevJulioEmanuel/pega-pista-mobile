@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import com.google.firebase.auth.GoogleAuthProvider
 
 
+
 // Estado da UI para autenticação
 data class AuthUiState(
     val isLoading: Boolean = false,
@@ -77,19 +78,19 @@ class AuthViewModel : ViewModel() {
 
     fun loginComGoogle(idToken: String) {
         _uiState.value = AuthUiState(isLoading = true)
-
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        val auth = FirebaseAuth.getInstance()
-
-        auth.signInWithCredential(credential)
-            .addOnSuccessListener { result ->
-                _uiState.value = AuthUiState(isSuccess = true)
-            }
-            .addOnFailureListener { e ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Erro no Google: ${e.message}"
-                )
-            }
+        viewModelScope.launch {
+            val result = repository.loginComGoogle(idToken)
+            result
+                .onSuccess {
+                    _uiState.value = AuthUiState(isSuccess = true)
+                }
+                .onFailure { e ->
+                    _uiState.value = AuthUiState(
+                        isLoading = false,
+                        error = "Erro no Google: ${e.message}"
+                    )
+                }
+        }
     }
+
 }
