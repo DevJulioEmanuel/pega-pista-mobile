@@ -12,7 +12,20 @@
           "package_name": "com.example.pegapista"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "800822141654-9qvqc7bsf9t8egh8mnq94b056chdqm0g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pegapista",
+            "certificate_hash": "1f781f4768b42206abd25e72f0931f95240e49aa"
+          }
+        },
+        {
+          "client_id": "WEB_CLIENT_ID_REMOVED",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyANArK41y8LDznYPD5sqW_u4ca_IRfSmxs"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "WEB_CLIENT_ID_REMOVED",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

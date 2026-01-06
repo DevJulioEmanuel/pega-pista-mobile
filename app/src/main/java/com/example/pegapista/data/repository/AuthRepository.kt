@@ -2,7 +2,10 @@ package com.example.pegapista.data.repository
 
 import com.example.pegapista.data.models.Usuario
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
 
 
@@ -19,6 +22,7 @@ class AuthRepository {
     suspend fun login(email: String, senha: String): Result<Boolean> {
         return try {
             auth.signInWithEmailAndPassword(email, senha).await()
+            salvarFcmToken()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
@@ -38,12 +42,54 @@ class AuthRepository {
             )
 
             db.collection("usuarios").document(user.uid).set(novoUsuario).await()
-
+            salvarFcmToken()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    //GOOGLE
+
+    suspend fun loginComGoogle(idToken: String): Result<Boolean> {
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val authResult = auth.signInWithCredential(credential).await()
+
+            val user = authResult.user ?: throw Exception("Usuário nulo")
+
+            val userRef = db.collection("usuarios").document(user.uid)
+            val snap = userRef.get().await()
+            if (!snap.exists()) {
+                val novoUsuario = Usuario(
+                    id = user.uid,
+                    nickname = user.displayName ?: "Usuário",
+                    email = user.email ?: ""
+                )
+                userRef.set(novoUsuario).await()
+            }
+            salvarFcmToken()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun salvarFcmToken() {
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { token ->
+                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnSuccessListener
+
+                FirebaseFirestore.getInstance()
+                    .collection("usuarios")
+                    .document(uid)
+                    .set(
+                        mapOf("fcmToken" to token),
+                        SetOptions.merge()
+                    )
+            }
+    }
+
 
     // Pegar usuário atual (útil para verificar se já está logado)
     fun getCurrentUser() = auth.currentUser
