@@ -10,21 +10,24 @@ import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.tasks.await
 
 class SyncUsersWorker(context: Context, params: WorkerParameters): CoroutineWorker(context,params) {
-    override suspend fun doWork(): Result{
+    override suspend fun doWork(): Result {
         val dao = AppDatabase.getDatabase(applicationContext).userDao()
-        val naoSincronizadas = dao.getUsernaoSincronizados()
+        val usersNaoSincronizados = dao.getUsernaoSincronizados()
         val dbFirestore = FirebaseFirestore.getInstance()
-
         return try {
-            naoSincronizadas.collect { users ->
+            // Itera sobre a lista simples
+            usersNaoSincronizados.forEach { userEntity ->
+
                 dbFirestore.collection("users")
-                    .document(users.id)
-                    .set(users)
-                    .await()
-                dao.atualizarUser(users.copy(userSincronizado = true))
+                    .document(userEntity.id)
+                    .set(userEntity)
+                    .await() // .await() funciona bem aqui porque doWork é suspend
+
+                // Atualiza localmente para sincronizado
+                dao.atualizarUser(userEntity.copy(userSincronizado = true))
             }
             Result.success()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             Result.retry()
         }
