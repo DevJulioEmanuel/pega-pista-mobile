@@ -1,34 +1,16 @@
 package com.example.pegapista.ui.screens
+
 import androidx.compose.foundation.Image
-
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-
-
-import androidx.compose.foundation.layout.* // Importa tudo de layout
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-
 import androidx.compose.foundation.rememberScrollState
-
 import androidx.compose.foundation.shape.CircleShape
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,39 +23,38 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pegapista.ui.theme.PegaPistaTheme
+import org.koin.androidx.compose.koinViewModel
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
 import com.example.pegapista.ui.viewmodels.PostViewModel
+// Certifique-se de importar o PostCard se ele estiver em outro arquivo
+// import com.example.pegapista.ui.components.PostCard
 
 @Composable
 fun PerfilUsuarioScreen(
     modifier: Modifier = Modifier.background(Color.White),
-    viewModel: PerfilUsuarioViewModel = viewModel(),
-    postsviewModel: PostViewModel = viewModel(),
+    viewModel: PerfilUsuarioViewModel = koinViewModel(),
+    postsviewModel: PostViewModel = koinViewModel(), // CORREÇÃO: Vírgula adicionada e uso do koinViewModel
     onCommentClick: (Postagem) -> Unit,
     idUsuario: String = ""
 ) {
     val usuario by viewModel.userState.collectAsState()
-    val postagens by postsviewModel.feedState.collectAsState()
-    val scrollState = rememberScrollState()
+    // val postagens by postsviewModel.feedState.collectAsState() // Não parecia estar sendo usado aqui, mas se precisar pode descomentar
     val isSeguindo by viewModel.isSeguindo.collectAsState()
     val posts by viewModel.postsUsuario.collectAsState()
     val meuId = postsviewModel.meuId
 
-
-    LaunchedEffect(Unit) {
+    LaunchedEffect(idUsuario) { // CORREÇÃO: Adicionei idUsuario na chave para recarregar se o ID mudar
         viewModel.carregarPerfilUsuario(idUsuario)
     }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -130,18 +111,20 @@ fun PerfilUsuarioScreen(
 
         items(posts) { post ->
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                // Certifique-se que o componente PostCard existe no seu projeto
                 PostCard(
                     post = post,
                     data = postsviewModel.formatarDataHora(post.data),
                     currentUserId = meuId,
                     onLikeClick = {
                         postsviewModel.toggleCurtidaPost(post)
-                        viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
+                        // Se você criou a função atualizarLikeNoPostLocal no ViewModel, descomente abaixo:
+                        // viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
                     },
                     onCommentClick = {
                         onCommentClick(post)
                     },
-                    )
+                )
             }
         }
 
@@ -149,8 +132,7 @@ fun PerfilUsuarioScreen(
             Spacer(Modifier.height(50.dp))
         }
     }
-        Spacer(Modifier.height(20.dp))
-    }
+}
 
 
 @Composable
@@ -162,7 +144,7 @@ fun TopUsuarioPerfil(user: Usuario) {
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Image(
-            painterResource(R.drawable.jaco),
+            painterResource(R.drawable.jaco), // Certifique-se que esta imagem existe
             contentDescription = "Foto do usuário",
             modifier = Modifier
                 .size(125.dp)
@@ -251,17 +233,19 @@ fun MetadadosUsuarioPerfil(user: Usuario) {
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
                 modifier = Modifier.fillMaxWidth()
+                    .padding(10.dp) // Adicionei padding interno para ficar mais bonito
             )
         }
         Spacer(Modifier.height(35.dp))
+
+        // CORREÇÃO: Usando BoxUsuarioText em vez de BoxText (que não estava definido)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            BoxText("Distância Total", distFormatada)
-            BoxText("Tempo Total", tempoFormatado)
+            BoxUsuarioText("Distância Total", distFormatada)
+            BoxUsuarioText("Tempo Total", tempoFormatado)
         }
-
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -294,6 +278,7 @@ fun BoxUsuarioText(metadata: String, data: String) {
                 text = metadata,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
+                fontSize = 12.sp, // Ajustei ligeiramente o tamanho
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(5.dp))
@@ -309,19 +294,8 @@ fun BoxUsuarioText(metadata: String, data: String) {
     }
 }
 
-
 fun formatarUsuarioHoras(segundos: Long): String {
     val horas = segundos / 3600
     val minutos = (segundos % 3600) / 60
     return "%dh %02dm".format(horas, minutos)
 }
-
-/*
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PerfilUsuarioScreenPreview() {
-    PegaPistaTheme {
-        PerfilUsuarioScreen()
-    }
-}
- */

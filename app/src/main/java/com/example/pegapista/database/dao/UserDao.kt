@@ -18,7 +18,7 @@ interface UserDao {
     suspend fun salvarUser(user: UserEntity)
 
     @Query("SELECT * FROM  users WHERE userSincronizado = 0")
-    suspend fun getUsernaoSincronizados(): Flow<UserEntity>
+    suspend fun getUsernaoSincronizados(): List<UserEntity>
 
     @Update
     suspend fun atualizarUser(user: UserEntity)
