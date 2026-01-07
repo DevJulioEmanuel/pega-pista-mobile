@@ -10,6 +10,7 @@ import com.example.pegapista.data.models.Postagem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
@@ -73,17 +74,25 @@ fun compartilharPost(context: Context, post: Postagem) {
                     type = "image/jpeg"
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-
-                context.startActivity(Intent.createChooser(shareIntent, "Compartilhar via..."))
+                withContext(Dispatchers.Main) {
+                    context.startActivity(Intent.createChooser(shareIntent, "Compartilhar via..."))
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, textoLegenda)
-                type = "text/plain"
+            withContext(Dispatchers.Main) {
+                val shareIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, textoLegenda)
+                    type = "text/plain"
+                }
+                context.startActivity(
+                    Intent.createChooser(
+                        shareIntent,
+                        "Compartilhar (erro na img)..."
+                    )
+                )
             }
-            context.startActivity(Intent.createChooser(shareIntent, "Compartilhar (erro na img)..."))
         }
     }
 }
