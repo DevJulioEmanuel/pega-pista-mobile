@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -38,6 +39,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,7 +73,13 @@ import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PostViewModel
 import compartilharPost
-
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun FeedScreen(
@@ -84,20 +92,36 @@ fun FeedScreen(
 ) {
     val postagens by viewModel.feedState.collectAsState()
     val meuId = viewModel.meuId
-    val qtdComentarios = viewModel.comentariosState.collectAsState().value.size
     var showDeleteDialog by remember { mutableStateOf(false) }
     var postDeleteId by remember { mutableStateOf<String?>(null) }
+
+    val pullState = rememberPullToRefreshState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val onRefresh: () -> Unit = {
+        isRefreshing = true
+        coroutineScope.launch {
+            delay(1000)
+            viewModel.carregarFeed()
+            isRefreshing = false
+        }
+    }
+
+
     LaunchedEffect(Unit) {
         viewModel.carregarFeed()
     }
 
     Column(
-        modifier = Modifier.background(Color.White)
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier.height(60.dp).fillMaxWidth()
-        ){
-            Text (
+        ) {
+            Text(
                 text = "Comunidade",
                 modifier = Modifier.align(Alignment.CenterStart).padding(start = 12.dp),
                 fontSize = 24.sp,
@@ -139,12 +163,12 @@ fun FeedScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
-            ){
+            ) {
                 Button(
                     onClick = { viewModel.carregarFeed() },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(50)
-                ){
+                ) {
                     Text("Feed", color = Color.White, fontWeight = FontWeight.Bold)
                 }
                 Button(
@@ -152,8 +176,12 @@ fun FeedScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                     border = BorderStroke(2.dp, Color.Gray),
                     shape = RoundedCornerShape(50)
-                ){
-                    Text("Ranking", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                ) {
+                    Text(
+                        "Ranking",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
             if (postagens.isEmpty()) {
@@ -161,31 +189,55 @@ fun FeedScreen(
                     Text("Nenhuma corrida ainda...", color = Color.Gray)
                 }
             } else {
-                LazyColumn(
+                PullToRefreshBox(
+                    state = pullState,
+                    isRefreshing = isRefreshing,
+                    onRefresh = onRefresh,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    indicator = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(top = 12.dp),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            PullToRefreshDefaults.Indicator(
+                                state = pullState,
+                                isRefreshing = isRefreshing,
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                color = Color.White
+                            )
+                        }
+                    }
                 ) {
-                    items(postagens) { post ->
-                        PostCard(
-                            post = post,
-                            viewModel = viewModel,
-                            data = viewModel.formatarDataHora(post.data),
-                            currentUserId = meuId,
-                            onLikeClick = {
-                                viewModel.toggleCurtidaPost(post)
-                            },
-                            onCommentClick = {
-                                onCommentClick(post)
-                            },
-                            onDeleteClick = { postId ->
-                                showDeleteDialog = true
-                                postDeleteId = postId
-                            },
-                            onProfileClick = onProfileClick
-                        )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(postagens) { post ->
+                            PostCard(
+                                post = post,
+                                viewModel = viewModel,
+                                data = viewModel.formatarDataHora(post.data),
+                                currentUserId = meuId,
+                                onLikeClick = {
+                                    viewModel.toggleCurtidaPost(post)
+                                },
+                                onCommentClick = {
+                                    onCommentClick(post)
+                                },
+                                onDeleteClick = { postId ->
+                                    showDeleteDialog = true
+                                    postDeleteId = postId
+                                },
+                                onProfileClick = onProfileClick
+                            )
+                        }
                     }
                 }
+
             }
             if (showDeleteDialog) {
                 AlertDialog(
@@ -208,10 +260,11 @@ fun FeedScreen(
                     }
                 )
             }
-
         }
     }
 }
+
+
 
 @Composable
 fun PostCard(

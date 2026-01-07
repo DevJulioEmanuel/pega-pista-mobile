@@ -52,13 +52,21 @@ import com.example.pegapista.ui.viewmodels.PostViewModel
 import java.io.File
 import androidx.compose.runtime.collectAsState
 import com.example.pegapista.data.models.Postagem
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun PerfilScreen(
     onDeslogar: () -> Unit,
-    modifier: Modifier = Modifier.background(Color.White),
     onCommentClick: (Postagem, String) -> Unit,
+    onSeguidoresClick: (String) -> Unit,
+    onSeguindoClick: (String) -> Unit,
     viewModel: PerfilViewModel = viewModel(),
     perfilviewModel: PerfilUsuarioViewModel = viewModel(),
     postsviewModel: PostViewModel = viewModel()
@@ -74,77 +82,119 @@ fun PerfilScreen(
             perfilviewModel.carregarPerfilUsuario(meuId)
         }
     }
+    val pullState = rememberPullToRefreshState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+    val onRefresh: () -> Unit = {
+        isRefreshing = true
+        coroutineScope.launch {
+            delay(1000)
+            viewModel.carregarPerfil()
+            isRefreshing = false
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.carregarPerfil()
+    }
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = Modifier.fillMaxSize(),
+        indicator = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(top = 12.dp),
+                contentAlignment = Alignment.TopCenter
             ) {
-                IconButton(onClick = {
-                    viewModel.deslogar()
-                    onDeslogar()
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = "Sair",
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-
-        item {
-            TopPerfil(usuario, viewModel)
-            Spacer(Modifier.height(5.dp))
-            MetadadosPerfil(usuario)
-            Spacer(Modifier.height(20.dp))
-        }
-
-        if (posts.isNotEmpty()) {
-            item {
-                Text(
-                    text = "Atividades Recentes",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = isRefreshing,
+                    containerColor = Color.White,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-            items(posts) { post ->
-                Box(modifier = Modifier.padding(vertical = 8.dp)) {
-                    PostCard(
-                        post = post,
-                        data = postsviewModel.formatarDataHora(post.data),
-                        currentUserId = usuario.id,
-                        onLikeClick = {
-                            postsviewModel.toggleCurtidaPost(post)
-                            perfilviewModel.atualizarLikeNoPostLocal(post.id, usuario.id ?: "")
-                        },
-                        onCommentClick = {
-                            onCommentClick(post, usuario.id)
-                        },
-                        onProfileClick = {}
-                    )
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(onClick = {
+                        viewModel.deslogar()
+                        onDeslogar()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Sair",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
-        } else {
+
             item {
-                Text(
-                    text = "Nenhuma atividade ainda.",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 14.sp
+                TopPerfil(usuario, viewModel)
+                Spacer(Modifier.height(5.dp))
+                MetadadosUsuarioPerfil(
+                    user = usuario,
+                    onSeguidoresClick = { onSeguidoresClick(usuario.id) },
+                    onSeguindoClick = { onSeguindoClick(usuario.id) }
                 )
+                Spacer(Modifier.height(20.dp))
+            }
+
+            if (posts.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Atividades Recentes",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                items(posts) { post ->
+                    Box(modifier = Modifier.padding(vertical = 8.dp)) {
+                        PostCard(
+                            post = post,
+                            data = postsviewModel.formatarDataHora(post.data),
+                            currentUserId = usuario.id,
+                            onLikeClick = {
+                                postsviewModel.toggleCurtidaPost(post)
+                                perfilviewModel.atualizarLikeNoPostLocal(post.id, usuario.id ?: "")
+                            },
+                            onCommentClick = {
+                                onCommentClick(post, usuario.id)
+                            },
+                            onProfileClick = {}
+                        )
+                    }
+                }
+            } else {
+                item {
+                    Text(
+                        text = "Nenhuma atividade ainda.",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
     }
+
 
 }
 
@@ -272,121 +322,6 @@ fun TopPerfil(
                 }
             }
         )
-    }
-}
-
-@Composable
-fun MetadadosPerfil(user: Usuario) {
-    val distFormatada = "%.1f km".format(user.distanciaTotalKm)
-    val tempoFormatado = formatarHoras(user.tempoTotalSegundos)
-    val ritmoMedio = if (user.distanciaTotalKm > 0.0) {
-        val minutosTotais = user.tempoTotalSegundos / 60.0
-        val pace = minutosTotais / user.distanciaTotalKm
-        "%.2f min/km".format(pace)
-    } else "0:00 min/km"
-
-    Column (
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.height(15.dp))
-        Row (
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ){
-            Column {
-                Text(
-                    text = "Seguidores",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.White
-                )
-                Text(
-                    text = "${user.seguidores}",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
-                )
-            }
-            Spacer(Modifier.width(40.dp))
-            Column {
-                Text(
-                    text = "Seguindo",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.White
-                )
-                Text(
-                    text = "${user.seguindo}",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
-                )
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = if (user.diasSeguidos>1) {
-                "${user.diasSeguidos} dias!"}
-            else {
-                "${user.diasSeguidos} dia!"
-            },
-            fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color.White
-        )
-        Spacer(Modifier.height(15.dp))
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 35.dp)
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 5.dp,
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .background(Color.White)
-                .clip(RoundedCornerShape(10.dp))
-        )
-        Spacer(Modifier.height(10.dp))
-        Box(modifier = Modifier
-            .padding(horizontal = 35.dp)
-            .fillMaxWidth()
-            .shadow(
-                elevation = 5.dp,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .background(Color.White)
-            .clip(RoundedCornerShape(10.dp))
-        ) {
-            Text(
-                text = if (user.recordeDiasSeguidos>1) {
-                    "Seu recorde foi de ${user.recordeDiasSeguidos} dias seguidos!"}
-                else {
-                    "Seu recorde foi de ${user.recordeDiasSeguidos} dia seguidos!"
-                },
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.W500,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)
-            )
-        }
-        Spacer(Modifier.height(35.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            BoxText("Distância Total", distFormatada)
-            BoxText("Tempo Total", tempoFormatado)
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            BoxText("Tempo Ritmo", ritmoMedio)
-            BoxText("Calorias Queimadas", "${user.caloriasQueimadas} kcal")
-        }
     }
 }
 

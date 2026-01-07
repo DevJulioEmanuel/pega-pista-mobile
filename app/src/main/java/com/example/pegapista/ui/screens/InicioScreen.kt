@@ -22,7 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,7 +33,6 @@ import com.example.pegapista.ui.theme.PegaPistaTheme
 
 @Composable
 fun InicioScreen(
-    // 1. CORREÇÃO: Os parâmetros ficam AQUI (dentro dos parênteses), não lá em baixo
     onEntrarClick: () -> Unit,
     onCadastrarClick: () -> Unit
 ) {
@@ -41,7 +43,7 @@ fun InicioScreen(
         Spacer(modifier = Modifier.weight(1f))
 
         Image(
-            painter = painterResource(R.drawable.logo_aplicativo),
+            painter = painterResource(R.drawable.logo__aplicativo),
             contentDescription = "Logo do aplicativo",
             modifier = Modifier
                 .size(400.dp)
@@ -58,11 +60,11 @@ fun InicioScreen(
             elevation = CardDefaults.cardElevation(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(300.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
                 Text(
@@ -70,34 +72,36 @@ fun InicioScreen(
                     color = Color.White,
                     fontSize = 30.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 20.dp, start = 20.dp, bottom = 5.dp)
+                    modifier = Modifier.padding(top = 20.dp, start = 20.dp, bottom = 5.dp, end = 20.dp)
                 )
                 Text(
-                    text = "Comece a carregar atividades, compita com amigos e, acima de tudo, divirta-se!",
+                    text = "Registre suas atividades, desafie seus amigos e aproveite cada momento!\"",
                     color = Color.White.copy(alpha = 0.8f),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
-                    modifier = Modifier.padding(start = 20.dp, bottom = 10.dp)
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp, start = 20.dp, bottom = 5.dp, end = 20.dp)
                 )
+                Spacer(Modifier.height(20.dp))
 
                 // --- BOTÃO ENTRAR ---
                 Button(
                     // 2. AQUI: Quando clicar, aciona o "onEntrarClick"
                     onClick = onEntrarClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF068EC9)
+                        containerColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
-                        .padding(top = 10.dp)
+                        .padding(top = 10.dp, start = 100.dp, end = 100.dp)
                 ) {
                     Text(
                         text = "Entrar",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -105,19 +109,19 @@ fun InicioScreen(
                 Button(
                     onClick = onCadastrarClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF068EC9)
+                        containerColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
-                        .padding(top = 10.dp)
+                        .padding(top = 10.dp, start = 100.dp, end = 100.dp)
                 ) {
                     Text(
                         text = "Cadastre-se",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
