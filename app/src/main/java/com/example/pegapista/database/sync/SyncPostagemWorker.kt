@@ -4,65 +4,88 @@ import android.content.Context
 import android.net.Uri
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import androidx.core.net.toUri
 import com.example.pegapista.database.AppDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import java.io.File
 
-class SyncPostagemWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class SyncPostagemWorker(
+    context: Context,
+    workerParams: WorkerParameters
+) : CoroutineWorker(context, workerParams) {
+
+    private val db = AppDatabase.getDatabase(context)
+    private val postagemDao = db.postagemDao()
+    private val remoteDb = FirebaseFirestore.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     override suspend fun doWork(): Result {
-        val dao = AppDatabase.getDatabase(applicationContext).postagemDao()
-        val naoSincronizadas = dao.getPostagemNaoSincronizada() // Retorna List<PostagemEntity>
-
-        val dbFirestore = FirebaseFirestore.getInstance()
-        val storageRef = FirebaseStorage.getInstance().reference
-
         return try {
-            naoSincronizadas.forEach { postEntity ->
+            val postsNaoSincronizados = postagemDao.getPostagemNaoSincronizada()
 
-                var urlFinalDaFoto = postEntity.fotoUrl
+            if (postsNaoSincronizados.isEmpty()) {
+                return Result.success()
+            }
 
-                // 1. Verifica se existe foto e se ela é local (não começa com http)
-                if (postEntity.fotoUrl != null && !postEntity.fotoUrl.startsWith("http")) {
+            for (entity in postsNaoSincronizados) {
+
+                val urlsNaNuvem = mutableListOf<String>()
+
+                val listaCaminhosLocais = if (entity.fotoUrl.isNullOrBlank()) {
+                    emptyList()
+                } else {
+                    entity.fotoUrl.split(";")
+                }
+
+                for (caminhoLocal in listaCaminhosLocais) {
                     try {
-                        val uriLocal = postEntity.fotoUrl.toUri()
-                        val refImagem = storageRef.child("posts/${postEntity.id}.jpg")
+                        val arquivo = File(caminhoLocal)
+                        if (arquivo.exists()) {
+                            val uriArquivo = Uri.fromFile(arquivo)
+                            val storageRef = storage.reference.child("posts/${entity.id}/${arquivo.name}")
 
-                        // Faz o Upload
-                        refImagem.putFile(uriLocal).await()
 
-                        // Pega o Link de Download (http...)
-                        urlFinalDaFoto = refImagem.downloadUrl.await().toString()
+                            storageRef.putFile(uriArquivo).await()
 
+                            val downloadUrl = storageRef.downloadUrl.await().toString()
+
+                            urlsNaNuvem.add(downloadUrl)
+                        }
                     } catch (e: Exception) {
-                        // Se falhar o upload da imagem, não podemos enviar o post quebrado.
-                        // Retornamos Retry para tentar de novo quando a net estiver melhor.
-                        return Result.retry()
+                        e.printStackTrace()
+
                     }
                 }
 
-                // 2. Prepara o objeto final para o Firestore com a URL certa
-                val postParaSalvar = postEntity.copy(
-                    fotoUrl = urlFinalDaFoto,
-                    postsincronizado = true // No Firebase não precisamos deste campo, mas para converter ajuda
+                val postHashMap = hashMapOf(
+                    "id" to entity.id,
+                    "userId" to entity.userId,
+                    "autorNome" to entity.autorNome,
+                    "titulo" to entity.titulo,
+                    "descricao" to entity.descricao,
+                    "corrida" to hashMapOf(
+                        "distanciaKm" to entity.distanciaKm,
+                        "tempo" to entity.tempo,
+                        "pace" to entity.pace
+                    ),
+                    "data" to entity.data,
+                    "curtidas" to emptyList<String>(),
+                    "qtdComentarios" to 0,
+
+                    "urlsFotos" to urlsNaNuvem
                 )
 
-                // Removemos o campo 'postsincronizado' antes de enviar, se quiseres ser purista,
-                // ou enviamos tudo. Vou enviar tudo por simplicidade, mas o ideal é mapear para Model.
 
-                dbFirestore.collection("posts")
-                    .document(postEntity.id)
-                    .set(postParaSalvar) // O Firestore vai salvar a estrutura do Entity
+                remoteDb.collection("posts").document(entity.id)
+                    .set(postHashMap)
                     .await()
 
-                // 3. Atualiza no Banco Local (Dizendo que já foi e atualizando a URL para a remota)
-                dao.atualizarPostagem(postEntity.copy(
-                    fotoUrl = urlFinalDaFoto, // Atualizamos localmente para a URL web também
-                    postsincronizado = true
-                ))
+
+                val postAtualizado = entity.copy(postsincronizado = true)
+                postagemDao.salvarPostagem(postAtualizado)
             }
+
             Result.success()
         } catch (e: Exception) {
             e.printStackTrace()

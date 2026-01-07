@@ -41,17 +41,16 @@ import com.example.pegapista.ui.viewmodels.PostViewModel
 fun PerfilUsuarioScreen(
     modifier: Modifier = Modifier.background(Color.White),
     viewModel: PerfilUsuarioViewModel = koinViewModel(),
-    postsviewModel: PostViewModel = koinViewModel(), // CORREÇÃO: Vírgula adicionada e uso do koinViewModel
+    postsviewModel: PostViewModel = koinViewModel(),
     onCommentClick: (Postagem) -> Unit,
     idUsuario: String = ""
 ) {
     val usuario by viewModel.userState.collectAsState()
-    // val postagens by postsviewModel.feedState.collectAsState() // Não parecia estar sendo usado aqui, mas se precisar pode descomentar
     val isSeguindo by viewModel.isSeguindo.collectAsState()
     val posts by viewModel.postsUsuario.collectAsState()
     val meuId = postsviewModel.meuId
 
-    LaunchedEffect(idUsuario) { // CORREÇÃO: Adicionei idUsuario na chave para recarregar se o ID mudar
+    LaunchedEffect(idUsuario) {
         viewModel.carregarPerfilUsuario(idUsuario)
     }
 
@@ -111,14 +110,12 @@ fun PerfilUsuarioScreen(
 
         items(posts) { post ->
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                // Certifique-se que o componente PostCard existe no seu projeto
                 PostCard(
                     post = post,
                     data = postsviewModel.formatarDataHora(post.data),
                     currentUserId = meuId,
                     onLikeClick = {
                         postsviewModel.toggleCurtidaPost(post)
-                        // Se você criou a função atualizarLikeNoPostLocal no ViewModel, descomente abaixo:
                         // viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
                     },
                     onCommentClick = {
@@ -144,7 +141,7 @@ fun TopUsuarioPerfil(user: Usuario) {
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Image(
-            painterResource(R.drawable.jaco), // Certifique-se que esta imagem existe
+            painterResource(R.drawable.jaco),
             contentDescription = "Foto do usuário",
             modifier = Modifier
                 .size(125.dp)
@@ -233,12 +230,11 @@ fun MetadadosUsuarioPerfil(user: Usuario) {
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
                 modifier = Modifier.fillMaxWidth()
-                    .padding(10.dp) // Adicionei padding interno para ficar mais bonito
+                    .padding(10.dp)
             )
         }
         Spacer(Modifier.height(35.dp))
 
-        // CORREÇÃO: Usando BoxUsuarioText em vez de BoxText (que não estava definido)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly

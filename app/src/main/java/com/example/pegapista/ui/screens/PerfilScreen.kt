@@ -35,7 +35,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
@@ -43,56 +42,69 @@ import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PerfilViewModel
+import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun PerfilScreen(
     onDeslogar: () -> Unit,
     modifier: Modifier = Modifier.background(Color.White),
-    viewModel: PerfilViewModel = viewModel()
+    viewModel: PerfilViewModel = koinViewModel()
 ) {
-
-    val usuario by viewModel.userState.collectAsState()
+    // Coleta o estado como Nullable (pode ser null no inicio)
+    val usuarioState by viewModel.userState.collectAsState()
     val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
         viewModel.carregarPerfil()
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(20.dp)
-            .clip(RoundedCornerShape(5.dp))
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            horizontalArrangement = Arrangement.End
+    // VERIFICAÇÃO DE SEGURANÇA: Só desenha se o usuário não for nulo
+    if (usuarioState != null) {
+        val usuario = usuarioState!! // Garante que não é nulo
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(20.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            IconButton(onClick = {
-                viewModel.deslogar()
-                onDeslogar()
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = "Sair",
-                    tint = Color.White,
-                    modifier = Modifier.size(30.dp)
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = {
+                    viewModel.deslogar()
+                    onDeslogar()
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Sair",
+                        tint = Color.White,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
             }
+
+            TopPerfil(usuario, viewModel)
+
+            Spacer(modifier = Modifier.height(5.dp))
+            MetadadosPerfil(usuario)
+            Spacer(Modifier.height(20.dp))
         }
-
-        TopPerfil(usuario, viewModel)
-
-        Spacer(modifier = Modifier.height(5.dp))
-        MetadadosPerfil(usuario)
-        Spacer(Modifier.height(20.dp))
+    } else {
+        // TELA DE CARREGAMENTO
+        Box(
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color.White)
+        }
     }
 }
 
@@ -274,18 +286,9 @@ fun MetadadosPerfil(user: Usuario) {
             color = Color.White
         )
         Spacer(Modifier.height(15.dp))
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 35.dp)
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 5.dp,
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .background(Color.White)
-                .clip(RoundedCornerShape(10.dp))
-        )
-        Spacer(Modifier.height(10.dp))
+
+        // --- Corrigido: Removido Box vazio duplicado aqui ---
+
         Box(modifier = Modifier
             .padding(horizontal = 35.dp)
             .fillMaxWidth()

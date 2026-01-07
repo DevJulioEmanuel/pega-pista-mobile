@@ -36,17 +36,3 @@ fun UserEntity.toModel(): Usuario {
         recordeDiasSeguidos = this.recordeDiasSeguidos
     )
 }
-//fun User.toEntity(): UserEntity{
-//    return UserEntity (
-//        id = this.id,
-//        nickname = this.nickname,
-//        email = this.email,
-//        fotoPerfilUrl = this.fotoPerfilUrl,
-//        distanciaTotalKm = this.distanciaTotalKm,
-//        tempoTotalSegundos = this.tempoTotalSegundos,
-//        caloriasQueimadas = this.caloriasQueimadas,
-//        diasSeguidos = this.diasSeguidos,
-//        recordeDiasSeguidos = this.recordeDiasSeguidos,
-//        userSincronizado = this.userSincronizado
-//    )
-//}

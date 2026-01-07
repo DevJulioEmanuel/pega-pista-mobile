@@ -15,15 +15,13 @@ class SyncUsersWorker(context: Context, params: WorkerParameters): CoroutineWork
         val usersNaoSincronizados = dao.getUsernaoSincronizados()
         val dbFirestore = FirebaseFirestore.getInstance()
         return try {
-            // Itera sobre a lista simples
             usersNaoSincronizados.forEach { userEntity ->
 
                 dbFirestore.collection("users")
                     .document(userEntity.id)
                     .set(userEntity)
-                    .await() // .await() funciona bem aqui porque doWork é suspend
+                    .await()
 
-                // Atualiza localmente para sincronizado
                 dao.atualizarUser(userEntity.copy(userSincronizado = true))
             }
             Result.success()
