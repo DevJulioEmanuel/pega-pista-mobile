@@ -1,10 +1,12 @@
-package com.example.pegapista.worker
+package com.example.pegapista.database.sync
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.pegapista.database.AppDatabase
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
@@ -31,7 +33,6 @@ class SyncPostagemWorker(
             for (entity in postsNaoSincronizados) {
 
                 val urlsNaNuvem = mutableListOf<String>()
-
                 val listaCaminhosLocais = if (entity.fotoUrl.isNullOrBlank()) {
                     emptyList()
                 } else {
@@ -45,16 +46,13 @@ class SyncPostagemWorker(
                             val uriArquivo = Uri.fromFile(arquivo)
                             val storageRef = storage.reference.child("posts/${entity.id}/${arquivo.name}")
 
-
                             storageRef.putFile(uriArquivo).await()
-
                             val downloadUrl = storageRef.downloadUrl.await().toString()
 
                             urlsNaNuvem.add(downloadUrl)
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
-
                     }
                 }
 
@@ -72,15 +70,35 @@ class SyncPostagemWorker(
                     "data" to entity.data,
                     "curtidas" to emptyList<String>(),
                     "qtdComentarios" to 0,
-
                     "urlsFotos" to urlsNaNuvem
                 )
-
 
                 remoteDb.collection("posts").document(entity.id)
                     .set(postHashMap)
                     .await()
 
+                try {
+                    val distKm = entity.distanciaKm
+                    val tempoSegundos = converterTempoParaSegundos(entity.tempo)
+                    val calorias = (distKm * 70).toLong() // Estimativa: 70kcal por km
+
+                    val updates = mapOf(
+                        "distanciaTotalKm" to FieldValue.increment(distKm),
+                        "tempoTotalSegundos" to FieldValue.increment(tempoSegundos),
+                        "caloriasQueimadas" to FieldValue.increment(calorias),
+                        "ultimaAtividade" to System.currentTimeMillis()
+                    )
+
+                    remoteDb.collection("usuarios").document(entity.userId)
+                        .update(updates)
+                        .await()
+
+                    Log.d("SyncWorker", "Estatísticas atualizadas para o usuário ${entity.userId}")
+
+                } catch (e: Exception) {
+                    Log.e("SyncWorker", "Erro ao somar estatísticas: ${e.message}")
+
+                }
 
                 val postAtualizado = entity.copy(postsincronizado = true)
                 postagemDao.salvarPostagem(postAtualizado)
@@ -90,6 +108,19 @@ class SyncPostagemWorker(
         } catch (e: Exception) {
             e.printStackTrace()
             Result.retry()
+        }
+    }
+
+    private fun converterTempoParaSegundos(tempoStr: String): Long {
+        return try {
+            val partes = tempoStr.split(":").map { it.toLong() }
+            when (partes.size) {
+                3 -> partes[0] * 3600 + partes[1] * 60 + partes[2]
+                2 -> partes[0] * 60 + partes[1]
+                else -> 0L
+            }
+        } catch (e: Exception) {
+            0L
         }
     }
 }

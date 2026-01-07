@@ -5,7 +5,7 @@ import androidx.work.*
 import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.database.AppDatabase
 import com.example.pegapista.database.dao.toEntity
-import com.example.pegapista.worker.SyncCorridasWorker
+import com.example.pegapista.database.sync.SyncCorridasWorker
 import com.google.firebase.auth.FirebaseAuth
 import java.util.UUID
 

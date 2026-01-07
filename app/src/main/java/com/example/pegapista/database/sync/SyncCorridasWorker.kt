@@ -1,4 +1,4 @@
-package com.example.pegapista.worker
+package com.example.pegapista.database.sync
 
 import android.content.Context
 import androidx.work.CoroutineWorker

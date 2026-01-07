@@ -1,6 +1,7 @@
 package com.example.pegapista.ui.screens
 
-import androidx.compose.foundation.Image
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,24 +34,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.example.pegapista.ui.theme.PegaPistaTheme
 import org.koin.androidx.compose.koinViewModel
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
 import com.example.pegapista.ui.viewmodels.PostViewModel
+import kotlin.let
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PerfilUsuarioScreen(
     modifier: Modifier = Modifier.background(Color.White),
@@ -137,10 +138,11 @@ fun PerfilUsuarioScreen(
                 PostCard(
                     post = post,
                     data = postsviewModel.formatarDataHora(post.data),
+                    viewModel = postsviewModel,
                     currentUserId = meuId,
                     onLikeClick = {
                         postsviewModel.toggleCurtidaPost(post)
-                        // viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
+                        viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
                     },
                     onCommentClick = {
                         onCommentClick(post)
@@ -193,17 +195,24 @@ fun TopUsuarioPerfil(user: Usuario) {
 
 @Composable
 fun MetadadosUsuarioPerfil(
-    user: Usuario,
+    user: Usuario?,
     onSeguidoresClick: () -> Unit,
     onSeguindoClick: () -> Unit
 ) {
-    val distFormatada = "%.1f km".format(user.distanciaTotalKm)
-    val tempoFormatado = formatarUsuarioHoras(user.tempoTotalSegundos)
-    val ritmoMedio = if (user.distanciaTotalKm > 0) {
-        val minutosTotais = user.tempoTotalSegundos / 60.0
-        val pace = minutosTotais / user.distanciaTotalKm
+    val distanciaKm = user?.distanciaTotalKm ?: 0.0
+    val tempoSegundos = user?.tempoTotalSegundos ?: 0L
+
+    val distFormatada = "%.1f km".format(distanciaKm)
+    val tempoFormatado = formatarUsuarioHoras(tempoSegundos)
+
+    val ritmoMedio = if (distanciaKm > 0 && tempoSegundos > 0) {
+        val minutosTotais = tempoSegundos / 60.0
+        val pace = minutosTotais / distanciaKm
         "%.2f min/km".format(pace)
-    } else "0:00 min/km"
+    } else {
+        "0:00 min/km"
+    }
+
 
     Column (
         modifier = Modifier.fillMaxWidth(),
@@ -222,7 +231,7 @@ fun MetadadosUsuarioPerfil(
                     color = Color.White
                 )
                 Text(
-                    text = "${user.seguidores}",
+                    text = "${user?.seguidores}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
@@ -237,7 +246,7 @@ fun MetadadosUsuarioPerfil(
                     color = Color.White
                 )
                 Text(
-                    text = "${user.seguindo}",
+                    text = "${user?.seguindo}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
@@ -246,7 +255,7 @@ fun MetadadosUsuarioPerfil(
         }
         Spacer(Modifier.height(10.dp))
         Text(
-            text = "${user.diasSeguidos} dias!",
+            text = "${user?.diasSeguidos} dias!",
             fontSize = 20.sp,
             fontWeight = FontWeight.ExtraBold,
             color = Color.White
@@ -263,7 +272,7 @@ fun MetadadosUsuarioPerfil(
             .clip(RoundedCornerShape(10.dp))
         ) {
             Text(
-                text = "Seu recorde foi de ${user.recordeDiasSeguidos} dias seguidos!",
+                text = "Seu recorde foi de ${user?.recordeDiasSeguidos} dias seguidos!",
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
                 modifier = Modifier.fillMaxWidth()
@@ -285,7 +294,7 @@ fun MetadadosUsuarioPerfil(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             BoxUsuarioText("Tempo Ritmo", ritmoMedio)
-            BoxUsuarioText("Calorias Queimadas", "${user.caloriasQueimadas} kcal")
+            BoxUsuarioText("Calorias Queimadas", "${user?.caloriasQueimadas} kcal")
         }
     }
 }
@@ -328,9 +337,9 @@ fun BoxUsuarioText(metadata: String, data: String) {
 }
 
 
-fun formatarUsuarioHoras(segundos: Long): String {
-    val horas = segundos / 3600
-    val minutos = (segundos % 3600) / 60
+fun formatarUsuarioHoras(segundos: Long?): String {
+    val horas = segundos?.div(3600)
+    val minutos = (segundos?.rem(3600))?.div(60)
     return "%dh %02dm".format(horas, minutos)
 }
 
