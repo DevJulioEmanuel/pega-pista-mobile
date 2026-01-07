@@ -47,7 +47,6 @@ fun HomeScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- 1. SEÇÃO DO FOGUINHO (SEQUÊNCIA ATUAL) ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -82,7 +81,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- 2. RANKING DOS AMIGOS (CARROSSEL COM FOTOS) ---
         Text(
             text = "Ranking dos Amigos 🏆",
             modifier = Modifier.fillMaxWidth(),
@@ -114,7 +112,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- 3. ÚLTIMAS ATIVIDADES ---
         Text(
             text = "Últimas Atividades",
             modifier = Modifier.fillMaxWidth(),
@@ -135,7 +132,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // --- 4. BOTÃO INICIAR CORRIDA ---
         Button(
             onClick = onIniciarCorrida,
             modifier = Modifier
@@ -158,7 +154,6 @@ fun CardRankingAmigo(amigo: Usuario, posicao: Int) {
         modifier = Modifier.width(90.dp)
     ) {
         Box(contentAlignment = Alignment.TopEnd) {
-            // Foto do Usuário
             val imageModifier = Modifier
                 .size(75.dp)
                 .clip(CircleShape)
@@ -240,17 +235,30 @@ fun ItemAtividadeHome(post: Postagem) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = Color.Gray
-            )
+            if (post.urlsFotos.isNotEmpty()) {
+                AsyncImage(
+                    model = post.urlsFotos.first(),
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp).clip(CircleShape).border(1.dp, Color.LightGray, CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = Color.Gray
+                )
+            }
+
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(text = post.autorNome, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+
+                val distanciaFormatada = "%.2f".format(post.corrida.distanciaKm)
+
                 Text(
-                    text = "${post.corrida.distanciaKm}km em ${post.corrida.tempo}",
+                    text = "${distanciaFormatada}km em ${post.corrida.tempo}",
                     fontSize = 12.sp,
                     color = Color.DarkGray
                 )
