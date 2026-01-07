@@ -39,7 +39,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,7 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -78,6 +77,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -88,7 +88,8 @@ fun FeedScreen(
     onBuscarAmigosScreen: () -> Unit,
     onCommentClick: (Postagem) -> Unit,
     onProfileClick: (String) -> Unit,
-    viewModel: PostViewModel = viewModel()
+    //viewModel: PostViewModel = viewModel()
+    viewModel: PostViewModel = koinViewModel()
 ) {
     val postagens by viewModel.feedState.collectAsState()
     val meuId = viewModel.meuId
@@ -237,7 +238,6 @@ fun FeedScreen(
                         }
                     }
                 }
-
             }
             if (showDeleteDialog) {
                 AlertDialog(
@@ -260,11 +260,10 @@ fun FeedScreen(
                     }
                 )
             }
+
         }
     }
 }
-
-
 
 @Composable
 fun PostCard(

@@ -30,8 +30,13 @@ import coil.request.ImageRequest
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.ui.viewmodels.PostViewModel
+import com.example.pegapista.data.models.Postagem
 import java.text.SimpleDateFormat
 import java.util.Date
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pegapista.database.AppDatabase
+import com.example.pegapista.data.repository.PostRepository
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)

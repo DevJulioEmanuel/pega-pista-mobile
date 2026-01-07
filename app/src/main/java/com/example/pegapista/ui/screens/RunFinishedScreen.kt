@@ -39,7 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import coil.compose.AsyncImage
 import com.example.pegapista.R
 import com.example.pegapista.ui.components.SnapshotMap
@@ -61,28 +61,24 @@ fun RunFinishedScreen(
     pace: String = "-:--",
     caminhoPercorrido: List<LatLng> = emptyList(),
     onFinishNavigation: () -> Unit = {},
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostViewModel = koinViewModel()
 ) {
-    // ESTADOS
+
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
-    // FORMULARIO
     var titulo by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
     var mostrarOpcoesFoto by remember { mutableStateOf(false) }
 
-    // ESTADO DO MAPA (GOOGLE MAPS)
     val cameraPositionState = rememberCameraPositionState()
     var mapaAdicionado by remember { mutableStateOf(false) }
 
-    // DIALOGO PARA CONFIRMAR A EXCLUSAO DA ATIVIDADE
     var showDiscardDialog by remember { mutableStateOf(false) }
     BackHandler {
         showDiscardDialog = true
     }
 
-    // ARQUIVOS/IMAGENS
     var uriTemporaria by remember { mutableStateOf<Uri?>(null) }
     val listaFotos by viewModel.fotosSelecionadasUris.collectAsState()
     val galeriaLauncher = rememberLauncherForActivityResult(
@@ -190,7 +186,6 @@ fun RunFinishedScreen(
                             }
                         }
 
-                        // CENÁRIO 2: A lista está vazia (Mapa ainda não gerou) -> Mostra o Mapa para gerar a foto
                         else if (caminhoPercorrido.isNotEmpty() && !mapaAdicionado) {
                             SnapshotMap(
                                 caminhoPercorrido = caminhoPercorrido,
@@ -362,7 +357,7 @@ private fun criarUriParaPost(context: Context): Uri {
     }
     return FileProvider.getUriForFile(
         context,
-        "${context.packageName}.provider", // Deve bater com o Manifest
+        "${context.packageName}.provider",
         arquivo
     )
 }

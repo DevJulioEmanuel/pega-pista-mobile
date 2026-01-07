@@ -1,42 +1,87 @@
 package com.example.pegapista.data.repository
 
-import android.net.Uri
-import android.util.Log
+import android.content.Context
+import androidx.work.*
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Postagem
+import com.example.pegapista.database.AppDatabase
+import com.example.pegapista.database.entities.PostagemEntity
+import com.example.pegapista.utils.toModel
+import com.example.pegapista.worker.SyncPostagemWorker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
-class PostRepository {
-
-    private val db = FirebaseFirestore.getInstance()
+class PostRepository(
+    private val db: AppDatabase,
+    private val context: Context
+) {
     private val auth = FirebaseAuth.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+    private val postagemDao = db.postagemDao()
+    private val workManager = WorkManager.getInstance(context)
+    private val remoteDb = FirebaseFirestore.getInstance()
 
 
-    suspend fun criarPost(post: Postagem): Result<Boolean> {
+    suspend fun criarPost(postagem: Postagem): Result<Boolean> {
         return try {
             val user = auth.currentUser ?: throw Exception("Usuário não logado")
-            val postSalvo = post.copy(userId = user.uid)
 
-            db.collection("posts")
-                .document(post.id)
-                .set(postSalvo)
-                .await()
-            UserRepository().atualizarSequenciaDiaria()
+            val fotosConcatenadas = postagem.urlsFotos.joinToString(separator = ";")
+
+            val entity = PostagemEntity(
+                id = postagem.id.ifEmpty { UUID.randomUUID().toString() },
+                userId = user.uid,
+                autorNome = postagem.autorNome.ifBlank { user.displayName ?: "Corredor" },
+                titulo = postagem.titulo,
+                descricao = postagem.descricao,
+                distanciaKm = postagem.corrida.distanciaKm,
+                tempo = postagem.corrida.tempo,
+                pace = postagem.corrida.pace,
+                data = System.currentTimeMillis(),
+
+                fotoUrl = fotosConcatenadas,
+
+                postsincronizado = false
+            )
+
+            postagemDao.salvarPostagem(entity)
+     //       android.util.Log.d("SYNC_DEBUG", "0.5. Salvo no Room com sucesso!")
+
+            agendarSincronizacao()
+
             Result.success(true)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }
 
+    private fun agendarSincronizacao() {
+
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val syncRequest = OneTimeWorkRequestBuilder<SyncPostagemWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "sync_postagens",
+            ExistingWorkPolicy.REPLACE,
+            syncRequest
+        )
+    }
+
+    fun gerarIdPost(): String = UUID.randomUUID().toString()
+
     suspend fun excluirPost(postId: String): Result<Unit> {
         return try {
-            db.collection("posts").document(postId).delete().await()
+            remoteDb.collection("posts").document(postId).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -46,14 +91,13 @@ class PostRepository {
     suspend fun getFeedPosts(listaIds: List<String>): List<Postagem> {
         if (listaIds.isEmpty()) return emptyList()
         return try {
-            val snapshot = db.collection("posts")
+            val snapshot = remoteDb.collection("posts")
                 .whereIn("userId", listaIds)
                 .orderBy("data", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
 
             snapshot.toObjects(Postagem::class.java)
-
         } catch (e: Exception) {
             android.util.Log.e("FEED_ERRO", "Erro: ${e.message}")
             emptyList()
@@ -81,7 +125,7 @@ class PostRepository {
 
     suspend fun toggleCurtida(postId: String, userId: String, jaCurtiu: Boolean): Boolean {
         return try {
-            val postRef = db.collection("posts").document(postId)
+            val postRef = remoteDb.collection("posts").document(postId)
 
             if (jaCurtiu) {
                 postRef.update("curtidas", FieldValue.arrayRemove(userId)).await()
@@ -96,14 +140,13 @@ class PostRepository {
 
     suspend fun enviarComentario(postId: String, comentario: Comentario): Boolean {
         return try {
-            val batch = db.batch()
-
-            val novoComentarioRef = db.collection("posts").document(postId)
+            val batch = remoteDb.batch()
+            val novoComentarioRef = remoteDb.collection("posts").document(postId)
                 .collection("comentarios").document()
 
             batch.set(novoComentarioRef, comentario)
 
-            val postRef = db.collection("posts").document(postId)
+            val postRef = remoteDb.collection("posts").document(postId)
             batch.update(postRef, "qtdComentarios", FieldValue.increment(1))
 
             batch.commit().await()
@@ -116,7 +159,7 @@ class PostRepository {
 
     suspend fun getComentarios(postId: String): List<Comentario> {
         return try {
-            val snapshot = db.collection("posts").document(postId)
+            val snapshot = remoteDb.collection("posts").document(postId)
                 .collection("comentarios")
                 .orderBy("data")
                 .get()
