@@ -21,9 +21,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Postagem
-import com.example.pegapista.ui.viewmodels.PostViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pegapista.database.AppDatabase
+import com.example.pegapista.data.repository.PostRepository
+import com.example.pegapista.ui.viewmodels.PostViewModel
+//import com.example.pegapista.ui.viewmodels.PostViewModelFactory
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)

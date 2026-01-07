@@ -20,4 +20,7 @@ suspend fun atualizarPostagem(postagem: PostagemEntity)
 
 @Query("SELECT * FROM postagem ORDER BY data DESC")
 suspend fun getTodasPostagem(): List<PostagemEntity>
+
+@Query("SELECT * FROM postagem WHERE userId = :userId ORDER BY data DESC")
+suspend fun getPostagensPorUsuario(userId: String): List<PostagemEntity>
 }

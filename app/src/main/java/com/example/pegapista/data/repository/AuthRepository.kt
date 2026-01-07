@@ -15,7 +15,6 @@ class AuthRepository {
     }
     private val db = FirebaseFirestore.getInstance()
 
-    // Função de Login
     suspend fun login(email: String, senha: String): Result<Boolean> {
         return try {
             auth.signInWithEmailAndPassword(email, senha).await()
@@ -25,7 +24,6 @@ class AuthRepository {
         }
     }
 
-    // Função de Cadastro (Cria Auth + Salva no Firestore)
     suspend fun cadastrar(nome: String, email: String, senha: String): Result<Boolean> {
         return try {
             val authResult = auth.createUserWithEmailAndPassword(email, senha).await()
@@ -45,6 +43,5 @@ class AuthRepository {
         }
     }
 
-    // Pegar usuário atual (útil para verificar se já está logado)
     fun getCurrentUser() = auth.currentUser
 }

@@ -6,7 +6,8 @@ import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.database.AppDatabase
 import com.example.pegapista.database.entities.PostagemEntity
-import com.example.pegapista.worker.SyncPostagemWorker // <--- Importante: Certifica que o pacote está certo
+import com.example.pegapista.utils.toModel
+import com.example.pegapista.worker.SyncPostagemWorker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,42 +16,40 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class PostRepository(
-    private val db: AppDatabase, // Este é o banco LOCAL (Room)
+    private val db: AppDatabase,
     private val context: Context
 ) {
     private val auth = FirebaseAuth.getInstance()
     private val postagemDao = db.postagemDao()
     private val workManager = WorkManager.getInstance(context)
-
-    // CRIEI ESTA VARIÁVEL PARA O FIREBASE
     private val remoteDb = FirebaseFirestore.getInstance()
 
-    // ----------------------------------------------------------------
-    // PARTE 1: OFFLINE FIRST (Salvar Post)
-    // Usa o Banco Local (Room) e o WorkManager
-    // ----------------------------------------------------------------
 
     suspend fun criarPost(postagem: Postagem): Result<Boolean> {
         return try {
             val user = auth.currentUser ?: throw Exception("Usuário não logado")
 
-            // Converte o Model para Entity do Room
+            val fotosConcatenadas = postagem.urlsFotos.joinToString(separator = ";")
+
             val entity = PostagemEntity(
                 id = postagem.id.ifEmpty { UUID.randomUUID().toString() },
                 userId = user.uid,
-                autorNome = user.displayName ?: "Corredor",
+                autorNome = postagem.autorNome.ifBlank { user.displayName ?: "Corredor" },
                 titulo = postagem.titulo,
                 descricao = postagem.descricao,
-                corrida = postagem.corrida,
+                distanciaKm = postagem.corrida.distanciaKm,
+                tempo = postagem.corrida.tempo,
+                pace = postagem.corrida.pace,
                 data = System.currentTimeMillis(),
-                fotoUrl = postagem.urlsFotos.firstOrNull(),
+
+                fotoUrl = fotosConcatenadas,
+
                 postsincronizado = false
             )
 
-            // Salva no Room (db local)
             postagemDao.salvarPostagem(entity)
+     //       android.util.Log.d("SYNC_DEBUG", "0.5. Salvo no Room com sucesso!")
 
-            // Agenda o envio (WorkManager)
             agendarSincronizacao()
 
             Result.success(true)
@@ -61,6 +60,8 @@ class PostRepository(
     }
 
     private fun agendarSincronizacao() {
+
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -71,30 +72,13 @@ class PostRepository(
 
         workManager.enqueueUniqueWork(
             "sync_postagens",
-            ExistingWorkPolicy.APPEND,
+            ExistingWorkPolicy.REPLACE,
             syncRequest
         )
     }
 
-    fun gerarIdPost(): String {
-        return UUID.randomUUID().toString()
-    }
-    // No PostRepository.kt, adiciona isto:
+    fun gerarIdPost(): String = UUID.randomUUID().toString()
 
-    suspend fun getPostsPorUsuario(userId: String): List<Postagem> {
-        return try {
-            val snapshot = remoteDb.collection("posts")
-                .whereEqualTo("userId", userId)
-                .orderBy("data", Query.Direction.DESCENDING)
-                .get()
-                .await()
-            snapshot.toObjects(Postagem::class.java)
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    // Função auxiliar para deletar (agora deleta do Firebase direto, pode melhorar depois)
     suspend fun excluirPost(postId: String): Result<Unit> {
         return try {
             remoteDb.collection("posts").document(postId).delete().await()
@@ -104,32 +88,44 @@ class PostRepository(
         }
     }
 
-    // ----------------------------------------------------------------
-    // PARTE 2: ONLINE (Leitura de Feed, Comentários, Curtidas)
-    // Usa o Firebase (remoteDb) porque ainda não implementamos cache disso
-    // ----------------------------------------------------------------
+
+    suspend fun getPostsPorUsuario(userId: String): List<Postagem> {
+        try {
+            val snapshot = remoteDb.collection("posts")
+                .whereEqualTo("userId", userId)
+                .orderBy("data", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            val listaOnline = snapshot.toObjects(Postagem::class.java)
+            if (listaOnline.isNotEmpty()) return listaOnline
+
+        } catch (e: Exception) {
+            android.util.Log.e("REPO", "Erro online, buscando local: ${e.message}")
+        }
+
+        val entities = postagemDao.getPostagensPorUsuario(userId)
+        return entities.map { it.toModel() }
+    }
 
     suspend fun getFeedPosts(listaIds: List<String>): List<Postagem> {
         if (listaIds.isEmpty()) return emptyList()
         return try {
-            val snapshot = remoteDb.collection("posts") // Usa remoteDb aqui!
+            val snapshot = remoteDb.collection("posts")
                 .whereIn("userId", listaIds)
                 .orderBy("data", Query.Direction.DESCENDING)
                 .get()
                 .await()
 
             snapshot.toObjects(Postagem::class.java)
-
         } catch (e: Exception) {
-            android.util.Log.e("FEED_ERRO", "Erro: ${e.message}")
             emptyList()
         }
     }
 
     suspend fun toggleCurtida(postId: String, userId: String, jaCurtiu: Boolean): Boolean {
         return try {
-            val postRef = remoteDb.collection("posts").document(postId) // Usa remoteDb aqui!
-
+            val postRef = remoteDb.collection("posts").document(postId)
             if (jaCurtiu) {
                 postRef.update("curtidas", FieldValue.arrayRemove(userId)).await()
             } else {
@@ -143,8 +139,7 @@ class PostRepository(
 
     suspend fun enviarComentario(postId: String, comentario: Comentario): Boolean {
         return try {
-            val batch = remoteDb.batch() // Usa remoteDb aqui!
-
+            val batch = remoteDb.batch()
             val novoComentarioRef = remoteDb.collection("posts").document(postId)
                 .collection("comentarios").document()
 
@@ -156,14 +151,13 @@ class PostRepository(
             batch.commit().await()
             true
         } catch (e: Exception) {
-            e.printStackTrace()
             false
         }
     }
 
     suspend fun getComentarios(postId: String): List<Comentario> {
         return try {
-            val snapshot = remoteDb.collection("posts").document(postId) // Usa remoteDb aqui!
+            val snapshot = remoteDb.collection("posts").document(postId)
                 .collection("comentarios")
                 .orderBy("data")
                 .get()

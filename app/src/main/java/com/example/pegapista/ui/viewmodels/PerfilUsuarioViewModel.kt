@@ -59,9 +59,9 @@ class PerfilUsuarioViewModel(
 
     fun carregarPosts(userId: String) {
         viewModelScope.launch {
-            // Usa 'postRepository' (o do construtor)
+
             val posts = postRepository.getPostsPorUsuario(userId)
-            // ...
+
         }
     }
     fun toggleSeguir() {

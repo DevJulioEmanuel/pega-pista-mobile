@@ -41,12 +41,10 @@ class UserRepository {
         val agora = System.currentTimeMillis()
         val ultimaAtiv = usuario.ultimaAtividade
 
-        // 1. Se já fez algo HOJE, não aumenta a sequência de novo
         if (DateUtils.isMesmoDia(agora, ultimaAtiv)) return
 
-        // 2. Define a nova sequência
         val novaSequencia = if (DateUtils.isOntem(ultimaAtiv)) {
-            usuario.diasSeguidos + 1 // Ontem ele fez, então é +1
+            usuario.diasSeguidos + 1
         } else {
             1 // Não fez ontem, então reseta ou inicia em 1
         }
