@@ -125,7 +125,7 @@ fun HomeScreen(
         if (atividades.isEmpty()) {
             Text("Nenhuma atividade recente.", color = Color.Gray, fontSize = 14.sp)
         } else {
-            atividades.forEach { post ->
+            atividades.take(3).forEach { post ->
                 ItemAtividadeHome(post)
             }
         }
