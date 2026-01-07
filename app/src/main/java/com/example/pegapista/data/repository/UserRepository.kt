@@ -115,14 +115,20 @@ class UserRepository {
 
     // LOGICA DE SEGUIR (RELACIONAMENTOS) - JULIO EMANUEL
 
+    // --- ATUALIZE ESSA PARTE (LOGICA DE SEGUIR) ---
+
     suspend fun seguirUsuario(idAmigo: String): Boolean {
         val meuId = auth.currentUser?.uid ?: return false
         return try {
             val batch = db.batch()
 
-            val relacaoRef = db.collection("usuarios").document(meuId)
+            val euSeguindoRef = db.collection("usuarios").document(meuId)
                 .collection("seguindo").document(idAmigo)
-            batch.set(relacaoRef, mapOf("data" to System.currentTimeMillis()))
+            batch.set(euSeguindoRef, mapOf("data" to System.currentTimeMillis()))
+
+            val amigoSeguidoresRef = db.collection("usuarios").document(idAmigo)
+                .collection("seguidores").document(meuId)
+            batch.set(amigoSeguidoresRef, mapOf("data" to System.currentTimeMillis()))
 
             val meuPerfilRef = db.collection("usuarios").document(meuId)
             batch.update(meuPerfilRef, "seguindo", FieldValue.increment(1))
@@ -133,6 +139,7 @@ class UserRepository {
             batch.commit().await()
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }
@@ -142,9 +149,13 @@ class UserRepository {
         return try {
             val batch = db.batch()
 
-            val relacaoRef = db.collection("usuarios").document(meuId)
+            val euSeguindoRef = db.collection("usuarios").document(meuId)
                 .collection("seguindo").document(idAmigo)
-            batch.delete(relacaoRef)
+            batch.delete(euSeguindoRef)
+
+            val amigoSeguidoresRef = db.collection("usuarios").document(idAmigo)
+                .collection("seguidores").document(meuId)
+            batch.delete(amigoSeguidoresRef)
 
             val meuPerfilRef = db.collection("usuarios").document(meuId)
             batch.update(meuPerfilRef, "seguindo", FieldValue.increment(-1))
@@ -155,6 +166,7 @@ class UserRepository {
             batch.commit().await()
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }
@@ -224,6 +236,55 @@ class UserRepository {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+
+    suspend fun getListaSeguindo(userId: String): List<Usuario> {
+        return try {
+            val snapshot = db.collection("usuarios").document(userId)
+                .collection("seguindo")
+                .get()
+                .await()
+
+            val ids = snapshot.documents.map { it.id }
+            if (ids.isEmpty()) return emptyList()
+
+            buscarUsuariosPorIds(ids)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    suspend fun getListaSeguidores(userId: String): List<Usuario> {
+        return try {
+            val snapshot = db.collection("usuarios").document(userId)
+                .collection("seguidores")
+                .get()
+                .await()
+
+            val ids = snapshot.documents.map { it.id }
+            if (ids.isEmpty()) return emptyList()
+
+            buscarUsuariosPorIds(ids)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    private suspend fun buscarUsuariosPorIds(ids: List<String>): List<Usuario> {
+        val usuariosEncontrados = mutableListOf<Usuario>()
+
+        val lotes = ids.chunked(10)
+
+        for (lote in lotes) {
+            val snapshot = usersRef.whereIn("id", lote).get().await()
+            val usuariosDoLote = snapshot.toObjects(Usuario::class.java)
+            usuariosEncontrados.addAll(usuariosDoLote)
+        }
+
+        return usuariosEncontrados
     }
 
 }

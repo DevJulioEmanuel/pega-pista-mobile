@@ -58,10 +58,19 @@ class PerfilUsuarioViewModel: ViewModel() {
     fun toggleSeguir() {
         val userAlvo = _userState.value
         if (userAlvo.id.isBlank()) return
+
+        val jaSegue = _isSeguindo.value
+
+        _isSeguindo.value = !jaSegue
+
+        val ajuste = if (jaSegue) -1 else 1
+
+        _userState.value = userAlvo.copy(
+            seguidores = userAlvo.seguidores + ajuste
+        )
         viewModelScope.launch {
             val userAtual = repository.getUsuarioAtual()
-            val jaSegue = _isSeguindo.value
-            _isSeguindo.value = !jaSegue
+
             if (jaSegue) {
                 repository.deixarDeSeguirUsuario(userAlvo.id)
             } else {
@@ -71,7 +80,7 @@ class PerfilUsuarioViewModel: ViewModel() {
                     remetenteId = userAtual.id,
                     remetenteNome = userAtual.nickname,
                     tipo = TipoNotificacao.SEGUIR,
-                    mensagem = "${userAtual.nickname} começou a seguir você!.",
+                    mensagem = "${userAtual.nickname} começou a seguir você!",
                     data = System.currentTimeMillis()
                 )
                 launch {

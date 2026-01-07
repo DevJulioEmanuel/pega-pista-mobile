@@ -162,7 +162,33 @@ fun NavigationGraph(
             Box(Modifier.fillMaxSize().background(Color.White).statusBarsPadding()) {
                 PerfilUsuarioScreen(
                     idUsuario = idUsuario,
-                    onCommentClick = { post -> navController.navigate("comentarios/${post.id}/${idUsuario}") }
+                    onCommentClick = { post -> navController.navigate("comentarios/${post.id}/${idUsuario}") },
+                    onSeguidoresClick = { id -> navController.navigate("ListaUsuarios/SEGUIDORES/$id") },
+                    onSeguindoClick = { id -> navController.navigate("ListaUsuarios/SEGUINDO/$id") }
+                )
+            }
+        }
+
+        composable(
+            route = "ListaUsuarios/{tipo}/{idUsuario}",
+            arguments = listOf(
+                navArgument("tipo") { type = NavType.StringType },
+                navArgument("idUsuario") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val tipo = backStackEntry.arguments?.getString("tipo") ?: "SEGUIDORES"
+            val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
+            val titulo = if (tipo == "SEGUIDORES") "Seguidores" else "Seguindo"
+
+            Box(Modifier.fillMaxSize().background(Color.White).statusBarsPadding()) {
+                ListaUsuariosScreen(
+                    titulo = titulo,
+                    idUsuarioAlvo = idUsuario,
+                    tipoLista = tipo,
+                    onVoltar = { navController.popBackStack() },
+                    onUsuarioClick = { idNovoUsuario ->
+                        navController.navigate("PerfilUsuario/$idNovoUsuario")
+                    }
                 )
             }
         }
@@ -173,7 +199,6 @@ fun NavigationGraph(
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getString("postId") ?: ""
             val remetenteId = backStackEntry.arguments?.getString("remetenteId") ?: ""
-            // Comentários já tem tratamento interno no Scaffold dele, mas por segurança:
             ComentariosScreen(
                 postId = postId,
                 remetenteId = remetenteId,
@@ -182,7 +207,6 @@ fun NavigationGraph(
         }
 
         composable("notificacoes") {
-            // Se essa tela for usada fora do MainContainer, precisa de padding
             Box(Modifier.fillMaxSize().background(Color.White).statusBarsPadding()) {
                 NotificacoesScreen()
             }
@@ -199,7 +223,6 @@ fun MainContainer(
     val pagerState = rememberPagerState(pageCount = { 5 })
     val scope = rememberCoroutineScope()
 
-    // Sincroniza qual aba está ativa na BottomBar
     val currentRouteStub = when (pagerState.currentPage) {
         0 -> "Home"
         1 -> "comunidade"
@@ -218,7 +241,7 @@ fun MainContainer(
                         "Home" -> 0
                         "comunidade" -> 1
                         "perfil" -> 2
-                        "AtividadeBefore" -> 3 // Garanta que o nome da rota bata com sua BottomBar
+                        "AtividadeBefore" -> 3
                         "notificacoes" -> 4
                         else -> 0
                     }
@@ -227,7 +250,6 @@ fun MainContainer(
             )
         }
     ) { paddingValues ->
-        // O paddingValues do Scaffold cuida da BottomBar e da StatusBar AQUI DENTRO
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
@@ -257,8 +279,10 @@ fun MainContainer(
                     PerfilScreen(
                         onDeslogar = onDeslogar,
                         onCommentClick = { post, userId ->
-                            navController.navigate("comentarios/${post.id}/${userId}") // Ajustei aqui, antes estava post.userId que as vezes é null no card de perfil
-                        }
+                            navController.navigate("comentarios/${post.id}/${userId}")
+                        },
+                        onSeguidoresClick = { id -> navController.navigate("ListaUsuarios/SEGUIDORES/$id") },
+                        onSeguindoClick = { id -> navController.navigate("ListaUsuarios/SEGUINDO/$id") }
                     )
                 }
                 3 -> { // ATIVIDADE (Aba)

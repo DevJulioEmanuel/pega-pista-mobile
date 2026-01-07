@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,6 +66,8 @@ fun PerfilUsuarioScreen(
     viewModel: PerfilUsuarioViewModel = viewModel(),
     postsviewModel: PostViewModel = viewModel(),
     onCommentClick: (Postagem) -> Unit,
+    onSeguidoresClick: (String) -> Unit,
+    onSeguindoClick: (String) -> Unit,
     idUsuario: String = ""
 ) {
     val usuario by viewModel.userState.collectAsState()
@@ -91,7 +94,11 @@ fun PerfilUsuarioScreen(
         }
         item {
             Spacer(modifier = Modifier.height(5.dp))
-            MetadadosUsuarioPerfil(usuario)
+            MetadadosUsuarioPerfil(
+                user = usuario,
+                onSeguidoresClick = { onSeguidoresClick(usuario.id) },
+                onSeguindoClick = { onSeguindoClick(usuario.id) }
+                )
         }
         if (usuario.id!=meuId) {
             item {
@@ -196,7 +203,11 @@ fun TopUsuarioPerfil(user: Usuario) {
 }
 
 @Composable
-fun MetadadosUsuarioPerfil(user: Usuario) {
+fun MetadadosUsuarioPerfil(
+    user: Usuario,
+    onSeguidoresClick: () -> Unit,
+    onSeguindoClick: () -> Unit
+) {
     val distFormatada = "%.1f km".format(user.distanciaTotalKm)
     val tempoFormatado = formatarUsuarioHoras(user.tempoTotalSegundos)
     val ritmoMedio = if (user.distanciaTotalKm > 0) {
@@ -214,7 +225,7 @@ fun MetadadosUsuarioPerfil(user: Usuario) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ){
-            Column {
+            Column (modifier = Modifier.clickable { onSeguidoresClick() }) {
                 Text(
                     text = "Seguidores",
                     fontSize = 20.sp,
@@ -229,7 +240,7 @@ fun MetadadosUsuarioPerfil(user: Usuario) {
                 )
             }
             Spacer(Modifier.width(40.dp))
-            Column {
+            Column (modifier = Modifier.clickable { onSeguindoClick() }){
                 Text(
                     text = "Seguindo",
                     fontSize = 20.sp,
