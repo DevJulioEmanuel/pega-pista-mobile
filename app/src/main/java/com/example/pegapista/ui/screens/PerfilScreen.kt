@@ -49,6 +49,7 @@ import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
 import com.example.pegapista.ui.viewmodels.PerfilViewModel
 import com.example.pegapista.ui.viewmodels.PostViewModel
+import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import androidx.compose.runtime.collectAsState
 import com.example.pegapista.data.models.Postagem
@@ -61,13 +62,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun PerfilScreen(
     onDeslogar: () -> Unit,
     onCommentClick: (Postagem, String) -> Unit,
     onSeguidoresClick: (String) -> Unit,
     onSeguindoClick: (String) -> Unit,
-    viewModel: PerfilViewModel = viewModel(),
+    //viewModel: PerfilViewModel = viewModel(),
+    viewModel: PerfilViewModel = koinViewModel(),
     perfilviewModel: PerfilUsuarioViewModel = viewModel(),
     postsviewModel: PostViewModel = viewModel()
 ) {
@@ -194,8 +195,6 @@ fun PerfilScreen(
             }
         }
     }
-
-
 }
 
 @Composable
@@ -371,7 +370,7 @@ fun formatarHoras(segundos: Long): String {
 }
 
 
-private fun criarUriParaFoto(context: Context): Uri {
+fun criarUriParaFoto(context: Context): Uri {
     val arquivo = File.createTempFile(
         "foto_perfil_",
         ".jpg",
@@ -386,11 +385,14 @@ private fun criarUriParaFoto(context: Context): Uri {
         arquivo
     )
 }
+        }
+}
 
-@Preview(showBackground = true, showSystemUi = true)
+/*@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PerfilScreenPreview() {
     PegaPistaTheme {
         //PerfilScreen(onDeslogar = {})
     }
 }
+*/

@@ -1,8 +1,7 @@
 package com.example.pegapista.ui.screens
+
 import androidx.compose.foundation.Image
-
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,21 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-
-
-import androidx.compose.foundation.layout.* // Importa tudo de layout
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-
 import androidx.compose.foundation.rememberScrollState
-
 import androidx.compose.foundation.shape.CircleShape
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,9 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,6 +44,7 @@ import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.pegapista.ui.theme.PegaPistaTheme
+import org.koin.androidx.compose.koinViewModel
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.models.Usuario
@@ -63,8 +54,8 @@ import com.example.pegapista.ui.viewmodels.PostViewModel
 @Composable
 fun PerfilUsuarioScreen(
     modifier: Modifier = Modifier.background(Color.White),
-    viewModel: PerfilUsuarioViewModel = viewModel(),
-    postsviewModel: PostViewModel = viewModel(),
+    viewModel: PerfilUsuarioViewModel = koinViewModel(),
+    postsviewModel: PostViewModel = koinViewModel(),
     onCommentClick: (Postagem) -> Unit,
     onSeguidoresClick: (String) -> Unit,
     onSeguindoClick: (String) -> Unit,
@@ -77,11 +68,9 @@ fun PerfilUsuarioScreen(
     val posts by viewModel.postsUsuario.collectAsState()
     val meuId = postsviewModel.meuId
 
-
-    LaunchedEffect(Unit) {
+    LaunchedEffect(idUsuario) {
         viewModel.carregarPerfilUsuario(idUsuario)
     }
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -151,7 +140,7 @@ fun PerfilUsuarioScreen(
                     currentUserId = meuId,
                     onLikeClick = {
                         postsviewModel.toggleCurtidaPost(post)
-                        viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
+                        // viewModel.atualizarLikeNoPostLocal(post.id, meuId ?: "")
                     },
                     onCommentClick = {
                         onCommentClick(post)
@@ -278,6 +267,7 @@ fun MetadadosUsuarioPerfil(
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
                 modifier = Modifier.fillMaxWidth()
+                    .padding(10.dp)
             )
         }
         Spacer(Modifier.height(35.dp))
@@ -285,8 +275,8 @@ fun MetadadosUsuarioPerfil(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            BoxText("Distância Total", distFormatada)
-            BoxText("Tempo Total", tempoFormatado)
+            BoxUsuarioText("Distância Total", distFormatada)
+            BoxUsuarioText("Tempo Total", tempoFormatado)
         }
 
 
@@ -321,6 +311,7 @@ fun BoxUsuarioText(metadata: String, data: String) {
                 text = metadata,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
+                fontSize = 12.sp,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(5.dp))
