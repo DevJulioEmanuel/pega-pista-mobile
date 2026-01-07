@@ -12,6 +12,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -261,9 +262,14 @@ fun MainContainer(
                     val homeViewModel: HomeViewModel = viewModel()
                     val usuario by homeViewModel.usuario.collectAsState()
                     val ranking by homeViewModel.ranking.collectAsState()
+                    val atividades by homeViewModel.atividadesAmigos.collectAsState()
+                    LaunchedEffect(Unit) {
+                        homeViewModel.carregarDadosUsuario()
+                    }
                     HomeScreen(
                         usuario = usuario,
                         ranking = ranking,
+                        atividades = atividades,
                         onIniciarCorrida = { scope.launch {
                             pagerState.animateScrollToPage(3)
                         } }

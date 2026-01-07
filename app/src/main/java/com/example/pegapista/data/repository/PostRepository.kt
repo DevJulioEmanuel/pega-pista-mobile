@@ -93,7 +93,8 @@ class PostRepository(
         return try {
             val snapshot = remoteDb.collection("posts")
                 .whereIn("userId", listaIds)
-                .orderBy("data", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .orderBy("data", Query.Direction.DESCENDING)
+                .limit(10)
                 .get()
                 .await()
 
