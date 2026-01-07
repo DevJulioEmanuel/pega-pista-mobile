@@ -1,13 +1,15 @@
 package com.example.pegapista.data.repository
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.work.*
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.database.AppDatabase
 import com.example.pegapista.database.entities.PostagemEntity
+import com.example.pegapista.database.sync.SyncPostagemWorker
 import com.example.pegapista.utils.toModel
-import com.example.pegapista.worker.SyncPostagemWorker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -60,8 +62,6 @@ class PostRepository(
     }
 
     private fun agendarSincronizacao() {
-
-
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -104,13 +104,10 @@ class PostRepository(
         }
     }
 
-    fun gerarIdPost(): String {
-        return db.collection("posts").document().id
-    }
-
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getPostsPorUsuario(userId: String): List<Postagem> {
         return try {
-            val snapshot = db.collection("posts")
+            val snapshot = remoteDb.collection("posts")
                 .whereEqualTo("userId", userId)
                 .orderBy("data", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
@@ -169,19 +166,4 @@ class PostRepository(
             emptyList()
         }
     }
-
-    //UPLOAD IMAGEM
-
-    suspend fun uploadImagem(uri: Uri): String? {
-        return try {
-            val ref = storage.reference.child("corridas/${System.currentTimeMillis()}.jpg")
-            ref.putFile(uri).await()
-            ref.downloadUrl.await().toString()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-
 }

@@ -209,12 +209,13 @@ fun NotificacaoItem(notificacao: Notificacao) {
                 Text(
                     text = tituloPadrao,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    fontSize = 17.sp,
                     color = MaterialTheme.colorScheme.primary
                 )
+                Spacer(Modifier.height(3.dp))
                 Text(
                     text = notificacao.mensagem,
-                    fontSize = 11.sp,
+                    fontSize = 13.sp,
                     lineHeight = 14.sp,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                     maxLines = 2
@@ -229,7 +230,7 @@ fun NotificacaoItem(notificacao: Notificacao) {
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = tempoRelativo,
-                    fontSize = 10.sp,
+                    fontSize = 12.sp,
                     color = Color.Gray
                 )
             }

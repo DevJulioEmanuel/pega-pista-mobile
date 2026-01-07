@@ -25,7 +25,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -75,7 +74,6 @@ import compartilharPost
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
@@ -260,7 +258,6 @@ fun FeedScreen(
                     }
                 )
             }
-
         }
     }
 }
@@ -268,11 +265,11 @@ fun FeedScreen(
 @Composable
 fun PostCard(
     post: Postagem,
-    viewModel: PostViewModel = viewModel(),
+    viewModel: PostViewModel,
     data: String = "",
     onLikeClick: () -> Unit,
     onCommentClick: (Postagem) -> Unit,
-    currentUserId: String,
+    currentUserId: String?,
     onDeleteClick: (String) -> Unit = {},
     onProfileClick: (String) -> Unit
 ) {

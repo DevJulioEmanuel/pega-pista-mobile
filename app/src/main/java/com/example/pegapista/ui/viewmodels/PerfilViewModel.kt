@@ -15,6 +15,8 @@ import comprimirImagem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 class PerfilViewModel(
     private val userRepository: UserRepository
@@ -48,8 +50,7 @@ class PerfilViewModel(
     fun atualizarFotoPerfil(uriImagem: Uri, context: Context) {
         viewModelScope.launch {
             val usuarioAtual = _userState.value
-            if (usuarioAtual.id.isEmpty()) return@launch
-            _isLoadingFoto.value = true
+            if (usuarioAtual?.id.isNullOrEmpty()) return@launch
 
             try {
                 val dadosDaFoto = comprimirImagem(context, uriImagem)
@@ -70,8 +71,6 @@ class PerfilViewModel(
 
             } catch (e: Exception) {
                 Log.e("PERFIL_VM", "Erro ao atualizar foto: ${e.message}")
-            } finally {
-                _isLoadingFoto.value = false
             }
         }
     }

@@ -60,8 +60,6 @@ class PostViewModel(
 
     private val _fotosSelecionadasUris = MutableStateFlow<List<Uri>>(emptyList())
     val fotosSelecionadasUris: StateFlow<List<Uri>> = _fotosSelecionadasUris
-    val meuId: String
-        get() = auth.currentUser?.uid ?: ""
 
     init {
         carregarFeed()
@@ -94,26 +92,26 @@ class PostViewModel(
                     copiarImagemParaCache(getApplication(), uri)
                 }
 
-            val corridaDados = Corrida(
-                distanciaKm = distancia,
-                tempo = tempo,
-                pace = pace
-            )
-            val tituloFinal = titulo.ifBlank { "Treino finalizado" }
-            val descricaoFinal = descricao.ifBlank { "Atividade registrada." }
+                val corridaDados = Corrida(
+                    distanciaKm = distancia,
+                    tempo = tempo,
+                    pace = pace
+                )
+                val tituloFinal = titulo.ifBlank { "Treino finalizado" }
+                val descricaoFinal = descricao.ifBlank { "Atividade registrada." }
 
-            val novaPostagem = Postagem(
-                id = repository.gerarIdPost(),
-                autorNome = usuarioAtual.nickname,
-                userId = usuarioAtual.id,
-                titulo = tituloFinal,
-                descricao = descricaoFinal,
-                corrida = corridaDados,
-                urlsFotos = listaFotosFinal,
-                data = System.currentTimeMillis()
-            )
+                val novaPostagem = Postagem(
+                    id = repository.gerarIdPost(),
+                    autorNome = usuarioAtual.nickname,
+                    userId = usuarioAtual.id,
+                    titulo = tituloFinal,
+                    descricao = descricaoFinal,
+                    corrida = corridaDados,
+                    urlsFotos = listaFotosFinal,
+                    data = System.currentTimeMillis()
+                )
 
-            val resultado = repository.criarPost(novaPostagem)
+                val resultado = repository.criarPost(novaPostagem)
 
                 resultado.onSuccess {
                     _uiState.value = PostUiState(isSuccess = true)

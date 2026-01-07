@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -66,56 +67,74 @@ fun BuscarAmigosScreen(
     val isLoading by viewModel.isLoading.collectAsState()
 
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
     ) {
-        Text (
-            text = "Buscar Amigos",
-            modifier = Modifier.padding(12.dp),
-            fontSize = 24.sp,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
-        )
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 0.dp),
-            thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
-        Spacer(modifier.height(20.dp))
-        Row {
-            OutlinedTextField(
-                value = textoBusca,
-                onValueChange = { viewModel.atualizarBusca(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                placeholder = { Text("Digite o nome do atleta...") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Search,
-                        contentDescription = "Pesquisar",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium
+        // --- CABEÇALHO (FIXO) ---
+        Column(
+            modifier = Modifier.padding(horizontal = 0.dp) // Container do cabeçalho
+        ) {
+            Text (
+                text = "Buscar Amigos",
+                modifier = Modifier.padding(12.dp),
+                fontSize = 24.sp,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 0.dp),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Row {
+                OutlinedTextField(
+                    value = textoBusca,
+                    onValueChange = { viewModel.atualizarBusca(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    placeholder = { Text("Digite o nome do atleta...") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Search,
+                            contentDescription = "Pesquisar",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium
+                )
+            }
+            Spacer(modifier = Modifier.height(25.dp))
+
+            Text(
+                text = if (textoBusca.isBlank()) "Sugestões para você" else "Resultados",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Gray,
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
         }
-        Spacer(modifier.height(25.dp))
 
-        Text(
-            text = if (textoBusca.isBlank()) "Sugestões para você" else "Resultados",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Gray,
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-        )
+        // --- LISTA (ROLÁVEL) ---
+        // Aqui está o segredo: weight(1f) faz a lista pegar TODO o espaço restante
         if (isLoading) {
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f), // <--- OBRIGATÓRIO PARA CENTRALIZAR NA TELA
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f), // <--- OBRIGATÓRIO PARA ROLAR
+                contentPadding = PaddingValues(bottom = 80.dp) // Padding extra no final para não cortar o último item
             ) {
                 if (usuariosEncontrados.isEmpty() && textoBusca.isNotEmpty()) {
                     item {
