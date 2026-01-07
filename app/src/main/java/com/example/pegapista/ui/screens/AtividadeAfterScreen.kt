@@ -49,12 +49,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.CorridaViewModel
 import com.google.android.gms.maps.model.LatLng
+import org.koin.androidx.compose.koinViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AtividadeAfterScreen(
-    viewModel: CorridaViewModel = viewModel(),
+    viewModel: CorridaViewModel = koinViewModel(),
     onFinishActivity: (distancia: Double, tempo: String, pace: String, List<LatLng>) -> Unit,
     onCancelActivity: () -> Unit
 ) {

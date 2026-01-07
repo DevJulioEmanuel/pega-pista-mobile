@@ -1,5 +1,7 @@
 package com.example.pegapista.ui.viewmodels
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pegapista.data.models.Notificacao
@@ -32,6 +34,7 @@ class PerfilUsuarioViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun carregarPerfilUsuario(userId: String) {
         if (userId.isBlank()) return
 
@@ -57,6 +60,7 @@ class PerfilUsuarioViewModel(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun carregarPosts(userId: String) {
         viewModelScope.launch {
 
@@ -120,6 +124,12 @@ class PerfilUsuarioViewModel(
             listaAtual[index] = postNovo
             _postsUsuario.value = listaAtual
         }
+    }
+
+    fun removerPostLocalmente(postId: String) {
+        val listaAtual = _postsUsuario.value.toMutableList()
+        listaAtual.removeAll { it.id == postId }
+        _postsUsuario.value = listaAtual
     }
 
 }

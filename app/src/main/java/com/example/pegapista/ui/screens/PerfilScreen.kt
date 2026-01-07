@@ -3,10 +3,12 @@ package com.example.pegapista.ui.screens
 import android.Manifest
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,10 +16,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.CameraAlt
@@ -33,19 +33,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.pegapista.R
 import com.example.pegapista.data.models.Usuario
-import com.example.pegapista.ui.theme.PegaPistaTheme
 import com.example.pegapista.ui.viewmodels.PerfilUsuarioViewModel
 import com.example.pegapista.ui.viewmodels.PerfilViewModel
 import com.example.pegapista.ui.viewmodels.PostViewModel
@@ -56,27 +51,29 @@ import com.example.pegapista.data.models.Postagem
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PerfilScreen(
     onDeslogar: () -> Unit,
-    onCommentClick: (Postagem, String) -> Unit,
-    onSeguidoresClick: (String) -> Unit,
-    onSeguindoClick: (String) -> Unit,
+    onCommentClick: (Postagem, String?) -> Unit,
+    onSeguidoresClick: (String?) -> Unit,
+    onSeguindoClick: (String?) -> Unit,
     //viewModel: PerfilViewModel = viewModel(),
     viewModel: PerfilViewModel = koinViewModel(),
-    perfilviewModel: PerfilUsuarioViewModel = viewModel(),
-    postsviewModel: PostViewModel = viewModel()
+    perfilviewModel: PerfilUsuarioViewModel = koinViewModel(),
+    postsviewModel: PostViewModel = koinViewModel()
 ) {
 
     val usuario by viewModel.userState.collectAsState()
-    val meuId = usuario.id
-    val scrollState = rememberScrollState()
+    val meuId = usuario?.id
     val posts = perfilviewModel.postsUsuario.collectAsState().value
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var postDeleteId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(meuId) {
         if (meuId != null) {
@@ -151,8 +148,8 @@ fun PerfilScreen(
                 Spacer(Modifier.height(5.dp))
                 MetadadosUsuarioPerfil(
                     user = usuario,
-                    onSeguidoresClick = { onSeguidoresClick(usuario.id) },
-                    onSeguindoClick = { onSeguindoClick(usuario.id) }
+                    onSeguidoresClick = { onSeguidoresClick(usuario?.id) },
+                    onSeguindoClick = { onSeguindoClick(usuario?.id) }
                 )
                 Spacer(Modifier.height(20.dp))
             }
@@ -171,14 +168,19 @@ fun PerfilScreen(
                     Box(modifier = Modifier.padding(vertical = 8.dp)) {
                         PostCard(
                             post = post,
+                            viewModel = postsviewModel,
                             data = postsviewModel.formatarDataHora(post.data),
-                            currentUserId = usuario.id,
+                            currentUserId = usuario?.id,
                             onLikeClick = {
                                 postsviewModel.toggleCurtidaPost(post)
-                                perfilviewModel.atualizarLikeNoPostLocal(post.id, usuario.id ?: "")
+                                perfilviewModel.atualizarLikeNoPostLocal(post.id, usuario?.id ?: "")
                             },
                             onCommentClick = {
-                                onCommentClick(post, usuario.id)
+                                onCommentClick(post, usuario?.id )
+                            },
+                            onDeleteClick = { postId ->
+                                showDeleteDialog = true
+                                postDeleteId = postId
                             },
                             onProfileClick = {}
                         )
@@ -194,12 +196,36 @@ fun PerfilScreen(
                 }
             }
         }
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Excluir atividade?") },
+                text = { Text("Essa ação não pode ser desfeita.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            postDeleteId?.let { id ->
+                                postsviewModel.excluirPost(id)
+                                perfilviewModel.removerPostLocalmente(id)
+                            }
+                            showDeleteDialog = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) { Text("Excluir") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                }
+            )
+        }
     }
 }
 
+
+
 @Composable
 fun TopPerfil(
-    user: Usuario,
+    user: Usuario?,
     viewModel: PerfilViewModel
 ) {
     val context = LocalContext.current
@@ -237,7 +263,7 @@ fun TopPerfil(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(contentAlignment = Alignment.BottomEnd) {
-            val foto = user.fotoPerfilUrl
+            val foto = user?.fotoPerfilUrl
             if (!foto.isNullOrEmpty()) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -290,7 +316,7 @@ fun TopPerfil(
 
         Spacer(Modifier.height(10.dp))
         Text(
-            user.nickname,
+            text = user?.nickname.orEmpty(),
             fontSize = 25.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color.White
@@ -385,8 +411,7 @@ fun criarUriParaFoto(context: Context): Uri {
         arquivo
     )
 }
-        }
-}
+
 
 /*@Preview(showBackground = true, showSystemUi = true)
 @Composable

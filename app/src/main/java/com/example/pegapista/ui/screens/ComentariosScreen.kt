@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pegapista.database.AppDatabase
 import com.example.pegapista.data.repository.PostRepository
+import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,7 +46,7 @@ fun ComentariosScreen(
     postId: String,
     remetenteId: String,
     onVoltar: () -> Unit,
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostViewModel = koinViewModel()
 ) {
     LaunchedEffect(postId) {
         viewModel.carregarComentarios(postId)

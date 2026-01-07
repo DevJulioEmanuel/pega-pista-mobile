@@ -264,7 +264,9 @@ fun MainContainer(
                     HomeScreen(
                         usuario = usuario,
                         ranking = ranking,
-                        onIniciarCorrida = { navController.navigate("AtividadeBefore") }
+                        onIniciarCorrida = { scope.launch {
+                            pagerState.animateScrollToPage(3)
+                        } }
                     )
                 }
                 1 -> { // COMUNIDADE

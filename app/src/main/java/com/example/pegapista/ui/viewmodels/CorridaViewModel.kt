@@ -105,24 +105,25 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
             )
 
             repository.salvarCorrida(novaCorrida).onSuccess {
-                try {
-                    userRepository.somarEstatisticasCorrida(
-                        distanciaKm = distKm,
-                        tempoSegundos = tempoFinal,
-                        calorias = caloriasEstimadas
-                    )
-                    _saveState.value = SaveRunState(isSuccess = true)
-                } catch (e: Exception) {
-                    _saveState.value = SaveRunState(isSuccess = false, error = e.message)
-                    val mensagemErro = e.message
-                    Log.e("PegaPistaLog", "FALHA AO SALVAR: $mensagemErro")
+
+                launch {
+                    try {
+                        userRepository.somarEstatisticasCorrida(
+                            distanciaKm = distKm,
+                            tempoSegundos = tempoFinal,
+                            calorias = caloriasEstimadas
+                        )
+                    } catch (e: Exception) {
+                        Log.e("OfflineMode", "Estatísticas não atualizadas (Offline): ${e.message}")
+                    }
                 }
+
+                _saveState.value = SaveRunState(isSuccess = true)
+
             }.onFailure {
                 _saveState.value = SaveRunState(error = it.message)
-                val mensagemErro = it.message
-                Log.e("PegaPistaLog", "FALHA AO SALVAR: $mensagemErro")
+                Log.e("PegaPistaLog", "FALHA AO SALVAR LOCALMENTE: ${it.message}")
             }
-
         }
     }
 
