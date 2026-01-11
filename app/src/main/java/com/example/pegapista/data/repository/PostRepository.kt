@@ -6,10 +6,9 @@ import androidx.annotation.RequiresApi
 import androidx.work.*
 import com.example.pegapista.data.models.Comentario
 import com.example.pegapista.data.models.Postagem
-import com.example.pegapista.database.AppDatabase
-import com.example.pegapista.database.entities.PostagemEntity
-import com.example.pegapista.database.sync.SyncPostagemWorker
-import com.example.pegapista.utils.toModel
+import com.example.pegapista.data.local.AppDatabase
+import com.example.pegapista.data.local.entities.PostagemEntity
+import com.example.pegapista.worker.SyncPostagemWorker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore

@@ -4,7 +4,6 @@ import java.util.Calendar
 
 object DateUtils {
 
-    // Verifica se dois timestamps pertencem ao mesmo dia, mês e ano
     fun isMesmoDia(timestamp1: Long, timestamp2: Long): Boolean {
         val cal1 = Calendar.getInstance().apply { timeInMillis = timestamp1 }
         val cal2 = Calendar.getInstance().apply { timeInMillis = timestamp2 }
@@ -13,7 +12,6 @@ object DateUtils {
                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
     }
 
-    // Verifica se o timestamp fornecido foi exatamente ontem em relação a agora
     fun isOntem(ultimoTimestamp: Long): Boolean {
         val agora = Calendar.getInstance()
         val ontem = Calendar.getInstance().apply {

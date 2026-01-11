@@ -41,10 +41,8 @@ class PerfilViewModel(
         }
     }
 
-    // Função que a tela PerfilScreen está pedindo
     fun deslogar() {
         auth.signOut()
-        // A navegação na tela vai perceber que o user é null e voltar pro login
     }
 
     fun atualizarFotoPerfil(uriImagem: Uri, context: Context) {

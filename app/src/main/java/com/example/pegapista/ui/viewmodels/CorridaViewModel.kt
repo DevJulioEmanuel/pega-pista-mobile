@@ -141,7 +141,7 @@ class CorridaViewModel(application: Application) : AndroidViewModel(application)
         else "%02d:%02d".format(minutos, segs)
     }
 
-    @SuppressLint("MissingPermission") // Assumimos que a MainActivity já pediu permissão
+    @SuppressLint("MissingPermission")
     fun buscarUltimaLocalizacao() {
         val context = getApplication<Application>().applicationContext
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)

@@ -1,7 +1,6 @@
 package com.example.pegapista.ui.viewmodels
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import  androidx.lifecycle.viewModelScope
 import com.example.pegapista.data.models.Postagem
 import com.example.pegapista.data.models.Usuario
 import com.example.pegapista.data.repository.UserRepository
@@ -11,13 +10,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.example.pegapista.database.AppDatabase
 
-class HomeViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val db = AppDatabase.getDatabase(application)
-    private val postRepository = PostRepository(db, application)
-    private val userRepository = UserRepository()
+class HomeViewModel(
+    application: Application,
+    private val userRepository: UserRepository,
+    private val postRepository: PostRepository
+    ) : AndroidViewModel(application) {
 
     private val _usuario = MutableStateFlow<Usuario?>(null)
     val usuario: StateFlow<Usuario?> = _usuario
