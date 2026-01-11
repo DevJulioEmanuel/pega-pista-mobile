@@ -2,7 +2,7 @@ package com.example.pegapista.utils
 
 import com.example.pegapista.data.models.Corrida
 import com.example.pegapista.data.models.Postagem
-import com.example.pegapista.database.entities.PostagemEntity
+import com.example.pegapista.data.local.entities.PostagemEntity
 
 // Função que converte a Entidade do Banco (PostagemEntity) para o Modelo do App (Postagem)
 fun PostagemEntity.toModel(): Postagem {

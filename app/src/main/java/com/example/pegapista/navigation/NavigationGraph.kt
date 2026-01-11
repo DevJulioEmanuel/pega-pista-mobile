@@ -18,18 +18,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.pegapista.service.RunningState
-import com.example.pegapista.ui.screens.*
+import com.example.pegapista.ui.components.BottomBar
+import com.example.pegapista.ui.screens.auth.CadastroScreen
+import com.example.pegapista.ui.screens.auth.InicioScreen
+import com.example.pegapista.ui.screens.auth.LoginScreen
+import com.example.pegapista.ui.screens.corrida.AtividadeAfterScreen
+import com.example.pegapista.ui.screens.corrida.AtividadeBeforeScreen
+import com.example.pegapista.ui.components.MapaVisualizacaoScreen
+import com.example.pegapista.ui.screens.corrida.RunFinishedScreen
+import com.example.pegapista.ui.screens.social.FeedScreen
+import com.example.pegapista.ui.screens.home.HomeScreen
+import com.example.pegapista.ui.screens.perfil.BuscarAmigosScreen
+import com.example.pegapista.ui.screens.perfil.ListaUsuariosScreen
+import com.example.pegapista.ui.screens.perfil.PerfilScreen
+import com.example.pegapista.ui.screens.perfil.PerfilUsuarioScreen
+import com.example.pegapista.ui.screens.social.ComentariosScreen
+import com.example.pegapista.ui.screens.social.NotificacoesScreen
+import com.example.pegapista.ui.screens.social.RankingScreen
 import com.example.pegapista.ui.viewmodels.HomeViewModel
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -52,7 +68,6 @@ fun NavigationGraph(
         startDestination = destinoInicial,
         modifier = modifier
     ) {
-        // --- TELA PRINCIPAL (COM SWIPE E BARRA) ---
         composable("main") {
             MainContainer(
                 navController = navController,
@@ -65,8 +80,6 @@ fun NavigationGraph(
             )
         }
 
-        // --- TELAS FORA DO CONTAINER (SEM BARRA EMBAIXO) ---
-
         composable("inicio") {
             Box(Modifier.fillMaxSize().background(Color.White).systemBarsPadding()) {
                 InicioScreen(
@@ -78,7 +91,6 @@ fun NavigationGraph(
 
         composable("login") {
             LoginScreen(
-                onVoltarClick = { navController.popBackStack() },
                 onEntrarHome = {
                     navController.navigate("main") { popUpTo("inicio") { inclusive = true } }
                 }
@@ -149,7 +161,6 @@ fun NavigationGraph(
         }
 
         composable("BuscarAmigos") {
-            // CORREÇÃO: Padding no topo
             Box(Modifier.fillMaxSize().background(Color.White).statusBarsPadding()) {
                 BuscarAmigosScreen(
                     onPerfilUsuarioScreen = { idUsuario -> navController.navigate("PerfilUsuario/$idUsuario") }
@@ -159,7 +170,6 @@ fun NavigationGraph(
 
         composable("PerfilUsuario/{idUsuario}") { backStackEntry ->
             val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
-            // CORREÇÃO: Padding no topo
             Box(Modifier.fillMaxSize().background(Color.White).statusBarsPadding()) {
                 PerfilUsuarioScreen(
                     idUsuario = idUsuario,
@@ -259,7 +269,7 @@ fun MainContainer(
         ) { page ->
             when (page) {
                 0 -> { // HOME
-                    val homeViewModel: HomeViewModel = viewModel()
+                    val homeViewModel: HomeViewModel = koinViewModel()
                     val usuario by homeViewModel.usuario.collectAsState()
                     val ranking by homeViewModel.ranking.collectAsState()
                     val atividades by homeViewModel.atividadesAmigos.collectAsState()
