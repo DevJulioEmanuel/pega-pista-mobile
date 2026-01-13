@@ -4,6 +4,17 @@ import java.util.Calendar
 
 object DateUtils {
 
+    fun isSequenciaAtiva(ultimaAtividadeTimestamp: Long): Boolean {
+        if (ultimaAtividadeTimestamp == 0L) return false
+
+        val agora = System.currentTimeMillis()
+        if (isMesmoDia(agora, ultimaAtividadeTimestamp)) return true
+
+        if (isOntem(ultimaAtividadeTimestamp)) return true
+
+        return false
+    }
+
     fun isMesmoDia(timestamp1: Long, timestamp2: Long): Boolean {
         val cal1 = Calendar.getInstance().apply { timeInMillis = timestamp1 }
         val cal2 = Calendar.getInstance().apply { timeInMillis = timestamp2 }

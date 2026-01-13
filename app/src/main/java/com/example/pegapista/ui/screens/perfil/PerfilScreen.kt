@@ -287,7 +287,7 @@ fun TopPerfil(
             } else {
                 Image(
                     painterResource(R.drawable.perfil_padrao),
-                    contentDescription = stringResource(R.string.desc_foto_padr_oo),
+                    contentDescription = stringResource(R.string.desc_foto_padr_o),
                     modifier = Modifier
                         .size(125.dp)
                         .clip(CircleShape)

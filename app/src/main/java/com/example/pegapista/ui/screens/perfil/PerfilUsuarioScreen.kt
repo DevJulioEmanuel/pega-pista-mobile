@@ -258,7 +258,7 @@ fun MetadadosUsuarioPerfil(
         }
         Spacer(Modifier.height(10.dp))
         Text(
-            text = stringResource(R.string.label_dias, user?.diasSeguidos),
+            text = stringResource(R.string.label_dias, user?.diasSeguidos?: 0),
             fontSize = 20.sp,
             fontWeight = FontWeight.ExtraBold,
             color = Color.White
@@ -277,7 +277,7 @@ fun MetadadosUsuarioPerfil(
             Text(
                 text = stringResource(
                     R.string.label_seu_recorde_foi_de_dias_seguidos,
-                    user?.recordeDiasSeguidos
+                    user?.recordeDiasSeguidos?:0
                 ),
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
