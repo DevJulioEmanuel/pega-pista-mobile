@@ -213,31 +213,18 @@ class UserRepository {
                 .await()
 
             snapshot.toObjects(Usuario::class.java)
+                .map { usuario ->
+                    if (!DateUtils.isSequenciaAtiva(usuario.ultimaAtividade)) {
+                        usuario.copy(diasSeguidos = 0)
+                    } else {
+                        usuario
+                    }
+                }
                 .sortedByDescending { it.diasSeguidos }
         } catch (e: Exception) {
             emptyList()
         }
     }
-
-    //SALVAR CORRIDA E INFORMACOES
-
-    suspend fun somarEstatisticasCorrida(distanciaKm: Double, tempoSegundos: Long, calorias: Int) {
-        val uid = auth.currentUser?.uid ?: return
-
-        try {
-            val updates = mapOf(
-                "distanciaTotalKm" to FieldValue.increment(distanciaKm),
-                "tempoTotalSegundos" to FieldValue.increment(tempoSegundos),
-                "caloriasQueimadas" to FieldValue.increment(calorias.toLong()),
-            )
-            usersRef.document(uid).update(updates).await()
-            atualizarSequenciaDiaria()
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
 
     suspend fun getListaSeguindo(userId: String): List<Usuario> {
         return try {

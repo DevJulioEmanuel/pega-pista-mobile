@@ -82,7 +82,7 @@
     <string name="desc_alterar_foto">Alterar foto</string>
     <string name="label_alterar_foto_de_perfil">Alterar Foto de Perfil</string>
     <string name="label_como_voc_deseja_enviar_a_foto">Como você deseja enviar a foto?</string>
-    <string name="label_seguindo">Seguindo ✓</string>
+    <string name="label_seguindo">Seguindo</string>
     <string name="label_seguir">Seguir</string>
     <string name="label_seguidores">Seguidores</string>
     <string name="label_dias">%1$d dias!</string>
