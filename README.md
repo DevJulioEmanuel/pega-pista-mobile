@@ -1,60 +1,104 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/AR7CADm8)
-[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=21023348)
+# 🏃‍♂️ PEGAPISTA
 
-# Proposta de aplicativo
+Aplicativo mobile de corrida com foco em **gamificação, consistência e competição social**.
 
-## Equipe
-
-- **Nome do Aluno(a) 1:** [Daniel Jacó dos Santos Pereira - 566734]
-- **Nome do Aluno(a) 2:** [Júlio Emanuel Pereira da Silva - 567856]
-- **Nome do Aluno(a) 3:** [Henrique Mendes da Silva - 567841]
+O PEGAPISTA transforma a prática de exercícios físicos em uma experiência interativa, motivadora e social, incentivando usuários a manterem regularidade através de mecânicas de ranking e recompensas.
 
 ---
 
-## PEGAPISTA!
+## 👥 Equipe
 
-## Descrição do Projeto
-
-O nosso projeto é um aplicativo de corrida que transforma o exercício físico numa experiência social, divertida e altamente motivacional. O principal problema que resolvemos é a barreira da inconsistência e da falta de estímulo que leva muitas pessoas a desistirem de correr. Para quem busca uma vida mais saudável, começar pode ser intimidante e a atividade pode tornar-se solitária rapidamente. A nossa solução combate diretamente esse desafio, convertendo cada corrida num jogo contagiante entre amigos e numa celebração do progresso pessoal, independentemente do nível do corredor.
-
-Pensado para um público-geral, desde quem está a calçar os ténis pela primeira vez até maratonistas que procuram uma competição saudável, o aplicativo tem como principal pilar a gamificação. As suas funcionalidades incluem o rastreamento completo da atividade (distância, ritmo, mapa do percurso, passos) e um poderoso sistema de competição social. Através de um ranking interno, os amigos podem comparar não só o desempenho, mas também a regularidade, com um sistema de "chamas" (foguinhos) que premeia a consistência. Além disso, a integração com a câmara permite partilhar fotos e momentos, transformando a experiência de correr num mural de conquistas e inspiração mútua.
+- Júlio Emanuel Pereira da Silva  
+- Daniel Jacó dos Santos Pereira  
+- Henrique Mendes da Silva  
 
 ---
 
-## Funcionalidades Principais
+## 🎯 Problema
 
-[Liste as principais funcionalidades do projeto. Use caixas de seleção para que a equipe possa marcar as concluídas nas próximas etapas.]
+Muitas pessoas iniciam a prática de corrida motivadas, mas desistem por:
 
-- [ ] Funcionalidade 1: [Rastreamento Completo da Corrida: Monitoramento em tempo real via GPS da distância, tempo, ritmo (pace), contagem de passos e calorias gastas.]
-- [ ] Funcionalidade 2: [Mapa Interativo: Visualização do percurso percorrido em um mapa do Google Maps durante e após a corrida.]
-- [ ] Funcionalidade 3: [Rede Social de Amigos: Adicionar amigos para acompanhar as atividades, interagir com curtidas,competir.]
-- [ ] Funcionalidade 4: [Ranking Competitivo: Um ranking (semanal e mensal) que compara o desempenho e, mais importante, a consistência entre os amigos.]
-- [ ] Funcionalidade 5: [Sistema de "Chamas" (Foguinho): Um recurso de gamificação que recompensa a regularidade das corridas, incentivando os usuários a não quebrarem a sequência.]
-- [ ] Funcionalidade 6: [Histórico e Análise de Progresso: Todas as corridas ficam salvas num histórico detalhado, com gráficos que mostram a evolução do desempenho ao longo do tempo.]
-- [ ] Funcionalidade 7: [Perfil de Corredor: Um perfil personalizável que exibe as estatísticas gerais, as "chamas" de consistência e as conquistas do usuário.]
-- [ ] Funcionalidade 8: [Notificações Inteligentes: Lembretes para manter a consistência, alertas sobre interações sociais e atualizações do ranking para manter o engajamento.]
+- Falta de consistência  
+- Baixa motivação ao longo do tempo  
+- Sensação de atividade solitária  
+- Ausência de acompanhamento estruturado  
+
+O PEGAPISTA busca resolver esse problema transformando cada corrida em uma experiência competitiva e recompensadora.
 
 ---
 
-> [!WARNING]
-> Daqui em diante o README.md só deve ser preenchido no momento da entrega final.
+## 💡 Solução Proposta
 
-## Tecnologias:
+O aplicativo combina:
 
-Liste aqui as tecnologias e bibliotecas que foram utilizadas no projeto.
+- Rastreamento completo da atividade física  
+- Elementos de gamificação  
+- Competição entre amigos  
+- Sistema de recompensas por regularidade  
+
+O foco principal não é apenas desempenho, mas **manutenção de hábito**.
 
 ---
 
-## Instruções para Execução
+## 🚀 Funcionalidades
 
-[Inclua instruções claras sobre como rodar o projeto localmente. Isso é crucial para que você possa testá-lo nas próximas entregas. **Somente caso haja alguma coisa diferente do usual**
+- [ ] **Rastreamento em tempo real**
+  - GPS
+  - Distância
+  - Tempo
+  - Ritmo (pace)
+  - Calorias estimadas
 
-```bash
-# Clone o repositório
-git clone [https://docs.github.com/pt/repositories/creating-and-managing-repositories/about-repositories](https://docs.github.com/pt/repositories/creating-and-managing-repositories/about-repositories)
+- [ ] **Mapa Interativo**
+  - Visualização do percurso via Google Maps
 
-# Navegue para o diretório
-cd [nome-do-repositorio]
+- [ ] **Rede Social Interna**
+  - Adição de amigos
+  - Interações entre usuários
+  - Visualização de atividades
 
-# Siga as instruções específicas para a sua tecnologia...
-```
+- [ ] **Ranking Competitivo**
+  - Ranking entre os amigos
+  - Comparação por desempenho e consistência
+
+- [ ] **Sistema de “Chamas” 🔥**
+  - Recompensa por sequência ativa de corridas
+  - Incentivo à regularidade
+
+- [ ] **Histórico de Atividades**
+  - Registro detalhado de todas as corridas
+
+- [ ] **Perfil do Usuário**
+  - Estatísticas gerais
+  - Conquistas
+  - Sequência ativa
+
+- [ ] **Notificações Inteligentes**
+  - Lembretes de atividade
+  - Interações sociais
+
+---
+
+## 🛠 Tecnologias Utilizadas
+
+*(Atualizar conforme implementação final)*
+
+- Kotlin
+- Firebase (Authentication, Firestore, Storage)
+- Google Maps API
+- Arquitetura MVVM
+- Material Design
+
+---
+
+## 🧱 Arquitetura
+
+O projeto segue princípios de organização modular, separando:
+
+- Camada de apresentação
+- Camada de domínio
+- Camada de dados
+
+Utilizando padrões que facilitam manutenção, escalabilidade e testabilidade.
+
+---
