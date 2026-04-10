@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pegapista.BuildConfig
 import com.example.pegapista.R // Certifique-se de ter um icone do google ou remova a Image
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -40,7 +41,7 @@ fun BotaoGoogle(
 ) {
     val context = LocalContext.current
 
-    val WEB_CLIENT_ID = "WEB_CLIENT_ID_REMOVED"
+    val WEB_CLIENT_ID = BuildConfig.GOOGLE_WEB_CLIENT_ID
 
     val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
